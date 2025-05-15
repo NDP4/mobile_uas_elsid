@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base colors -->
+    <color name="primary">#FF8300</color>
+    <color name="primary_light">#FFB156</color>
+    <color name="primary_dark">#CC6900</color>
+
+    <!-- Accent colors -->
+    <color name="secondary">#2D3142</color>
+    <color name="secondary_light">#4A506D</color>
+    <color name="secondary_dark">#1A1C26</color>
+
+    <!-- Neutral colors -->
+    <color name="background">#FFFFFF</color>
+    <color name="surface">#F5F5F5</color>
+    <color name="on_surface">#1C1C1C</color>
+
+    <!-- Text colors -->
+    <color name="text_primary">#2D3142</color>
+    <color name="text_secondary">#636363</color>
+    <color name="text_white">#FFFFFF</color>
+
+    <!-- Gradients -->
+    <color name="gradient_start">#FF8300</color>
+    <color name="gradient_dark">#FF6F00</color>
+    <color name="gradient_center">#FDCE71</color>
+    <color name="gradient_end">#FFD6A5</color>
+    <color name="gradient_custom1">#FDCE71</color>
+    <color name="gradient_custom2">#D96125</color>
+
+    <!-- Status colors -->
+    <color name="success">#4CAF50</color>
+    <color name="error">#F44336</color>
+    <color name="warning">#FFC107</color>
+    <color name="info">#2196F3</color>
+
+    <color name="wishlist_icon_inactive">#FF8300</color>
+    <color name="wishlist_icon_active">#FF4081</color>
+</resources>
