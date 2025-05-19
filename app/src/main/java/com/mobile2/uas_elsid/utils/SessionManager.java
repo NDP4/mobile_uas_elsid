@@ -83,7 +83,7 @@ public class SessionManager {
         editor = pref.edit();
     }
 
-    public void createLoginSession(String userId, String fullname, String email, String phone, String address) {
+    public void createLoginSession(String userId, String fullname, String email, String phone, String address, String avatar) {
         // Validate input
         if (userId == null || userId.isEmpty()) {
             System.out.println("Error - Attempting to create session with empty userId");
@@ -100,6 +100,7 @@ public class SessionManager {
         editor.putString(KEY_EMAIL, email);
         editor.putString(KEY_PHONE, phone);
         editor.putString(KEY_ADDRESS, address);
+        editor.putString(KEY_AVATAR, avatar);
 
         // Use commit() untuk memastikan data tersimpan segera
         boolean success = editor.commit();

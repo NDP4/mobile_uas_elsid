@@ -38,22 +38,42 @@ public class ProfileFragment extends Fragment {
         binding.phoneText.setText(sessionManager.getPhone());
         binding.addressText.setText(sessionManager.getAddress());
 
+//        // Load avatar
+//        String avatarPath = sessionManager.getAvatarPath();
+//        if (avatarPath != null && !avatarPath.isEmpty()) {
+//            // Construct full URL if path is not already a complete URL
+//            String fullUrl = avatarPath.startsWith("http") ?
+//                    avatarPath : "https://apilumenmobileuaslinux.ndp.my.id/" + avatarPath;
+//
+//            System.out.println("Loading profile avatar from: " + fullUrl); // Debug log
+//
+//            Glide.with(this)
+//                    .load(fullUrl)
+//                    .placeholder(R.drawable.default_avatar)
+//                    .error(R.drawable.default_avatar)
+//                    .skipMemoryCache(true) // Skip memory cache
+//                    .diskCacheStrategy(DiskCacheStrategy.NONE) // Skip disk cache
+//                    .into(binding.avatarImage);
+//        }
         // Load avatar
         String avatarPath = sessionManager.getAvatarPath();
         if (avatarPath != null && !avatarPath.isEmpty()) {
-            // Construct full URL if path is not already a complete URL
-            String fullUrl = avatarPath.startsWith("http") ?
-                    avatarPath : "https://apilumenmobileuaslinux.ndp.my.id/" + avatarPath;
+            String baseUrl = "https://apilumenmobileuaslinux.ndp.my.id/";
+            String fullUrl = avatarPath.startsWith("http") ? avatarPath : baseUrl + avatarPath;
 
-            System.out.println("Loading profile avatar from: " + fullUrl); // Debug log
+            // Debug log
+            System.out.println("Loading avatar from: " + fullUrl);
 
-            Glide.with(this)
+            Glide.with(requireContext())
                     .load(fullUrl)
                     .placeholder(R.drawable.default_avatar)
                     .error(R.drawable.default_avatar)
+                    .diskCacheStrategy(DiskCacheStrategy.NONE) // Disable caching
                     .skipMemoryCache(true) // Skip memory cache
-                    .diskCacheStrategy(DiskCacheStrategy.NONE) // Skip disk cache
                     .into(binding.avatarImage);
+        } else {
+            // Set default avatar if no path
+            binding.avatarImage.setImageResource(R.drawable.default_avatar);
         }
     }
 

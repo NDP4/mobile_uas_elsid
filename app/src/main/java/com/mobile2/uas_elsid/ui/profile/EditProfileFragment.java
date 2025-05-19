@@ -187,18 +187,29 @@ public class EditProfileFragment extends Fragment {
                         if (!isFragmentActive) return;
                         binding.loadingIndicator.setVisibility(View.GONE);
 
+//                        if (response.isSuccessful() && response.body() != null) {
+//                            UserResponse userResponse = response.body();
+//                            if (userResponse.getStatus() == 1 && userResponse.getUser() != null) {
+//                                String avatarPath = userResponse.getUser().getAvatar();
+//                                // Save and load the new avatar path
+//                                sessionManager.saveAvatarPath(avatarPath);
+//                                loadImageFromPath(avatarPath);
+//                                Toasty.success(requireContext(), "Avatar updated successfully").show();
+//                            } else {
+//                                Toasty.error(requireContext(), userResponse.getMessage()).show();
+//                            }
+//                        }
                         if (response.isSuccessful() && response.body() != null) {
                             UserResponse userResponse = response.body();
                             if (userResponse.getStatus() == 1 && userResponse.getUser() != null) {
                                 String avatarPath = userResponse.getUser().getAvatar();
-                                // Save and load the new avatar path
+                                // Save the relative path only
                                 sessionManager.saveAvatarPath(avatarPath);
+                                // Reload the image
                                 loadImageFromPath(avatarPath);
-                                Toasty.success(requireContext(), "Avatar updated successfully").show();
-                            } else {
-                                Toasty.error(requireContext(), userResponse.getMessage()).show();
                             }
-                        } else {
+                        }
+                        else {
                             Toasty.error(requireContext(), "Failed to update avatar").show();
                         }
                     }

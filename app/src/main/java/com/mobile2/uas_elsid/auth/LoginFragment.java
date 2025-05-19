@@ -63,7 +63,8 @@ public class LoginFragment extends Fragment {
                                 user.getFullname(),
                                 user.getEmail(),
                                 user.getPhone(),
-                                user.getAddress()
+                                user.getAddress(),
+                                user.getAvatar()
                         );
 
                         // Verify session
