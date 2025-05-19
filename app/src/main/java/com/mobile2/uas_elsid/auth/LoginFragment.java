@@ -6,11 +6,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import androidx.fragment.app.Fragment;
+
+import com.mobile2.uas_elsid.HomeActivity;
 import com.mobile2.uas_elsid.MainActivity;
 import com.mobile2.uas_elsid.api.ApiClient;
 import com.mobile2.uas_elsid.api.response.UserResponse;
 import com.mobile2.uas_elsid.api.response.request.LoginRequest;
 import com.mobile2.uas_elsid.databinding.FragmentLoginBinding;
+import com.mobile2.uas_elsid.model.User;
+import com.mobile2.uas_elsid.utils.SessionManager;
 
 import es.dmoral.toasty.Toasty;
 import retrofit2.Call;
@@ -44,12 +48,33 @@ public class LoginFragment extends Fragment {
             public void onResponse(Call<UserResponse> call, Response<UserResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     UserResponse apiResponse = response.body();
-                    if (apiResponse.getStatus() == 1) {
+                    if (apiResponse.getStatus() == 1 && apiResponse.getUser() != null) {
+                        User user = apiResponse.getUser();
+
+                        // Debug log
+                        System.out.println("Debug - Login Response:");
+                        System.out.println("User ID: " + user.getUserId());
+                        System.out.println("Fullname: " + user.getFullname());
+
+                        // Create session
+                        SessionManager sessionManager = new SessionManager(requireContext());
+                        sessionManager.createLoginSession(
+                                user.getUserId(),
+                                user.getFullname(),
+                                user.getEmail(),
+                                user.getPhone(),
+                                user.getAddress()
+                        );
+
+                        // Verify session
+                        if (sessionManager.getUserId() == null || sessionManager.getUserId().isEmpty()) {
+                            Toasty.error(requireContext(), "Failed to save session").show();
+                            return;
+                        }
+
                         Toasty.success(requireContext(), apiResponse.getMessage()).show();
-                        startActivity(new Intent(requireActivity(), MainActivity.class));
+                        startActivity(new Intent(requireActivity(), HomeActivity.class));
                         requireActivity().finish();
-                    } else {
-                        Toasty.error(requireContext(), apiResponse.getMessage()).show();
                     }
                 }
             }
@@ -59,7 +84,5 @@ public class LoginFragment extends Fragment {
                 Toasty.error(requireContext(), "Network error: " + t.getMessage()).show();
             }
         });
-
-
     }
 }

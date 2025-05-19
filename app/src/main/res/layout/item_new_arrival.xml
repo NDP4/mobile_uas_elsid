@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="4dp"
+    app:cardBackgroundColor="@color/primary"
+    app:cardElevation="1dp"
+    app:cardMaxElevation="1dp"
+    android:stateListAnimator="@null"
+    app:cardPreventCornerOverlap="true"
+    app:cardUseCompatPadding="true"
+    app:cardCornerRadius="12dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Image Container -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="180dp">
+
+            <ImageView
+                android:id="@+id/productImage"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"/>
+
+            <!-- New Tag -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="New"
+                android:textColor="@color/text_white"
+                android:background="@color/primary"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="4dp"
+                android:layout_gravity="start|top"
+                android:layout_margin="8dp"
+                android:textStyle="bold"
+                android:textSize="12sp"/>
+
+            <!-- Discount Badge -->
+            <TextView
+                android:id="@+id/discountText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@color/error"
+                android:padding="4dp"
+                android:textColor="@color/text_white"
+                android:textSize="12sp"
+                android:layout_gravity="end|top"
+                android:layout_margin="8dp"
+                android:visibility="gone"
+                tools:text="-20%"
+                tools:visibility="visible"/>
+
+            <!-- Stock Status -->
+            <TextView
+                android:id="@+id/soldOutLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Sold Out"
+                android:textColor="@color/text_white"
+                android:background="#80000000"
+                android:padding="8dp"
+                android:gravity="center"
+                android:textStyle="bold"
+                android:layout_gravity="bottom"
+                android:visibility="gone"/>
+        </FrameLayout>
+
+        <!-- Product Info Container -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <!-- Title -->
+            <TextView
+                android:id="@+id/titleText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="14sp"
+                android:textColor="@color/text_white"
+                android:maxLines="2"
+                android:ellipsize="end"
+                tools:text="Product Title"/>
+
+            <!-- Category -->
+            <TextView
+                android:id="@+id/categoryText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_white"
+                android:alpha="0.7"
+                android:textSize="12sp"
+                android:layout_marginTop="4dp"
+                tools:text="Category"/>
+
+            <!-- Views -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="4dp">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/ic_visibility"
+                    app:tint="@color/text_white"/>
+
+                <TextView
+                    android:id="@+id/viewCountText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/text_white"
+                    android:textSize="12sp"
+                    android:layout_marginStart="4dp"
+                    tools:text="100 views"/>
+            </LinearLayout>
+
+            <!-- Price Section -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="8dp">
+
+                <!-- Original Price (Strikethrough when discounted) -->
+                <TextView
+                    android:id="@+id/originalPriceText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/surface"
+                    android:textSize="12sp"
+                    android:visibility="gone"
+                    tools:text="Rp 1.000.000"
+                    tools:visibility="visible"/>
+
+                <!-- Final Price -->
+                <TextView
+                    android:id="@+id/priceText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/text_white"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    tools:text="Rp 800.000"/>
+            </LinearLayout>
+
+        </LinearLayout>
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>
