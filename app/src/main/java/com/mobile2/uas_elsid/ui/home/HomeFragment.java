@@ -12,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.navigation.NavController;
 import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
 import com.mobile2.uas_elsid.R;
@@ -45,7 +46,9 @@ import com.mobile2.uas_elsid.api.response.BannerResponse;
 import com.mobile2.uas_elsid.api.response.ProductResponse;
 import com.mobile2.uas_elsid.databinding.FragmentHomeBinding;
 import com.mobile2.uas_elsid.model.Banner;
+import com.mobile2.uas_elsid.model.CartItem;
 import com.mobile2.uas_elsid.model.Product;
+import com.mobile2.uas_elsid.utils.CartManager;
 import com.mobile2.uas_elsid.utils.SessionManager;
 
 import com.google.android.gms.location.LocationCallback;
@@ -107,6 +110,8 @@ public class HomeFragment extends Fragment implements CategoryAdapter.OnCategory
                     .navigate(R.id.navigation_product_detail, bundle);
         });
 
+
+
         // Inisialisasi SwipeRefreshLayout
         swipeRefresh = binding.swipeRefresh;
         swipeRefresh.setOnRefreshListener(() -> {
@@ -140,6 +145,7 @@ public class HomeFragment extends Fragment implements CategoryAdapter.OnCategory
         setupBanner();
         setupCategories();
         loadProducts();
+        setupCartButton();
         loadNewArrivals();
 
         return binding.getRoot();
@@ -255,6 +261,12 @@ public class HomeFragment extends Fragment implements CategoryAdapter.OnCategory
             startLocationUpdates();
         }
         startBannerAutoScroll();
+        updateCartBadge();
+    }
+    public void refreshCartBadge() {
+        if (isAdded() && binding != null) {
+            updateCartBadge();
+        }
     }
 
     @Override
@@ -446,6 +458,35 @@ public class HomeFragment extends Fragment implements CategoryAdapter.OnCategory
 //            Toasty.error(requireContext(), "Geocoding error: " + e.getMessage()).show();
 //        }
 //    }
+
+    private void setupCartButton() {
+        binding.cartButton.setOnClickListener(v -> {
+            NavController navController = Navigation.findNavController(requireView());
+            navController.navigate(R.id.action_navigation_home_to_navigation_checkout);
+        });
+    }
+    private void updateCartBadge() {
+        CartManager.getInstance(requireContext()).getCartItems(new CartManager.CartCallback() {
+            @Override
+            public void onSuccess(List<CartItem> items) {
+                if (binding != null) {
+                    if (items != null && !items.isEmpty()) {
+                        binding.cartBadge.setVisibility(View.VISIBLE);
+                        binding.cartBadge.setText(String.valueOf(items.size()));
+                    } else {
+                        binding.cartBadge.setVisibility(View.GONE);
+                    }
+                }
+            }
+
+            @Override
+            public void onError(String message) {
+                if (binding != null) {
+                    binding.cartBadge.setVisibility(View.GONE);
+                }
+            }
+        });
+    }
 
     private void setupBanner() {
         bannerAdapter = new BannerAdapter(requireContext());

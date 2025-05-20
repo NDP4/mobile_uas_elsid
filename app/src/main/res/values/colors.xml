@@ -36,4 +36,5 @@
 
     <color name="wishlist_icon_inactive">#FF8300</color>
     <color name="wishlist_icon_active">#FF4081</color>
+    <color name="divider">#E0E0E0</color>
 </resources>

@@ -2,9 +2,13 @@ package com.mobile2.uas_elsid.api;
 
 import com.mobile2.uas_elsid.api.response.BannerResponse;
 import com.mobile2.uas_elsid.api.response.CartResponse;
+import com.mobile2.uas_elsid.api.response.CityResponse;
+import com.mobile2.uas_elsid.api.response.CouponResponse;
 import com.mobile2.uas_elsid.api.response.ProductDetailResponse;
 import com.mobile2.uas_elsid.api.response.ProductResponse;
+import com.mobile2.uas_elsid.api.response.ProvinceResponse;
 import com.mobile2.uas_elsid.api.response.ReviewResponse;
+import com.mobile2.uas_elsid.api.response.ShippingCostResponse;
 import com.mobile2.uas_elsid.api.response.UserResponse;
 import com.mobile2.uas_elsid.api.response.request.LoginRequest;
 import com.mobile2.uas_elsid.api.response.request.RegisterRequest;
@@ -24,6 +28,7 @@ import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Part;
 import retrofit2.http.Path;
+import retrofit2.http.Query;
 
 public interface ApiService {
     @POST("api/login")
@@ -89,4 +94,15 @@ public interface ApiService {
 
     @DELETE("api/cart/{id}")
     Call<CartResponse> removeCartItem(@Path("id") int id);
+    @GET("api/shipping/provinces")
+    Call<ProvinceResponse> getProvinces();
+
+    @GET("api/shipping/cities")
+    Call<CityResponse> getCities(@Query("province") String provinceId);
+
+    @POST("api/shipping/calculate")
+    Call<ShippingCostResponse> calculateShipping(@Body Map<String, Object> request);
+    @POST("api/coupons/validate")
+    Call<CouponResponse> validateCoupon(@Body Map<String, String> request);
+
 }

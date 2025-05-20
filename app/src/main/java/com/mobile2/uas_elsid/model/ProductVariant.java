@@ -15,6 +15,7 @@ public class ProductVariant {
     private int discount;
     @SerializedName("stock")
     private int stock;
+    private int weight;
 
     // Getters
     public int getId() { return id; }
@@ -23,4 +24,6 @@ public class ProductVariant {
     public int getPrice() { return price; }
     public int getDiscount() { return discount; }
     public int getStock() { return stock; }
+    public int getWeight() { return weight; }
+    public void setWeight(int weight) { this.weight = weight; }
 }

@@ -19,6 +19,9 @@ public class ApiClient {
                     .setLenient()
                     .create();
 
+            HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor(message ->
+                    System.out.println("API Log: " + message));
+            loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
             HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
             interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
             OkHttpClient client = new OkHttpClient.Builder()

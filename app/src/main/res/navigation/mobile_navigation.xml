@@ -19,13 +19,30 @@
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
             app:popExitAnim="@anim/slide_out_right" />
+        <action
+            android:id="@+id/action_navigation_home_to_navigation_checkout"
+            app:destination="@id/navigation_checkout"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
     </fragment>
 
     <fragment
         android:id="@+id/navigation_checkout"
         android:name="com.mobile2.uas_elsid.ui.checkout.CheckoutFragment"
         android:label="@string/title_checkout"
-        tools:layout="@layout/fragment_checkout" />
+        tools:layout="@layout/fragment_checkout">
+
+        <!-- Add this action -->
+        <action
+            android:id="@+id/action_navigation_checkout_to_navigation_detail_pesanan"
+            app:destination="@id/navigation_detail_pesanan"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+    </fragment>
 
     <fragment
         android:id="@+id/navigation_profile"
@@ -71,4 +88,10 @@
             app:nullable="true"
             android:defaultValue="@null" />
     </fragment>
+
+    <fragment
+        android:id="@+id/navigation_detail_pesanan"
+        android:name="com.mobile2.uas_elsid.ui.checkout.DetailPesananFragment"
+        android:label="Detail Pesanan"
+        tools:layout="@layout/fragment_detail_pesanan" />
 </navigation>

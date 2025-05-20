@@ -4,9 +4,13 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import com.mobile2.uas_elsid.R;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
+import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.mobile2.uas_elsid.adapter.CartAdapter;
@@ -34,6 +38,7 @@ public class CheckoutFragment extends Fragment implements CartAdapter.CartItemLi
 
         if (sessionManager.isLoggedIn()) {
             setupRecyclerView();
+            setupCheckoutButton();
             updateEmptyState();
         } else {
             showLoginRequired();
@@ -112,6 +117,20 @@ public class CheckoutFragment extends Fragment implements CartAdapter.CartItemLi
                 .substring(0, rupiahFormat.format(subtotal).length() - 3);
         binding.subtotalText.setText(formattedSubtotal);
     }
+    private void setupCheckoutButton() {
+        binding.checkoutButton.setOnClickListener(v -> {
+            NavHostFragment navHostFragment = (NavHostFragment) requireActivity()
+                    .getSupportFragmentManager()
+                    .findFragmentById(R.id.nav_host_fragment_activity_home);
+
+            if (navHostFragment != null) {
+                NavController navController = navHostFragment.getNavController();
+                // Navigate to detail pesanan fragment
+                navController.navigate(R.id.action_navigation_checkout_to_navigation_detail_pesanan);
+            }
+        });
+    }
+
 
     @Override
     public void onDestroyView() {
