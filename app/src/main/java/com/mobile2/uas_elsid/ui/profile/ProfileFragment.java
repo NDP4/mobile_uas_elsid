@@ -38,6 +38,9 @@ public class ProfileFragment extends Fragment {
         binding.phoneText.setText(sessionManager.getPhone());
         binding.addressText.setText(sessionManager.getAddress());
 
+        // refresh avatar
+        refreshAvatar();
+
 //        // Load avatar
 //        String avatarPath = sessionManager.getAvatarPath();
 //        if (avatarPath != null && !avatarPath.isEmpty()) {
@@ -58,7 +61,7 @@ public class ProfileFragment extends Fragment {
         // Load avatar
         String avatarPath = sessionManager.getAvatarPath();
         if (avatarPath != null && !avatarPath.isEmpty()) {
-            String baseUrl = "https://apilumenmobileuaslinux.ndp.my.id/";
+            String baseUrl = "https://apilumenmobileuas.ndp.my.id/";
             String fullUrl = avatarPath.startsWith("http") ? avatarPath : baseUrl + avatarPath;
 
             // Debug log
@@ -96,10 +99,38 @@ public class ProfileFragment extends Fragment {
             requireActivity().finish();
         });
     }
+    public void refreshAvatar() {
+        String avatarPath = sessionManager.getAvatarPath();
+        if (avatarPath != null && !avatarPath.isEmpty()) {
+            String baseUrl = "https://apilumenmobileuas.ndp.my.id/";
+            String fullUrl = avatarPath.startsWith("http") ? avatarPath : baseUrl + avatarPath;
+
+            System.out.println("Refreshing avatar from: " + fullUrl);
+
+            if (binding != null && isAdded()) {
+                Glide.with(requireContext())
+                        .load(fullUrl)
+                        .placeholder(R.drawable.default_avatar)
+                        .error(R.drawable.default_avatar)
+                        .diskCacheStrategy(DiskCacheStrategy.NONE)
+                        .skipMemoryCache(true)
+                        .into(binding.avatarImage);
+            }
+        } else {
+            if (binding != null) {
+                binding.avatarImage.setImageResource(R.drawable.default_avatar);
+            }
+        }
+    }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;
+    }
+    @Override
+    public void onResume() {
+        super.onResume();
+        refreshAvatar();
     }
 }

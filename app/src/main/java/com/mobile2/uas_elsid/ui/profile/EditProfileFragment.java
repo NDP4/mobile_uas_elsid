@@ -187,29 +187,35 @@ public class EditProfileFragment extends Fragment {
                         if (!isFragmentActive) return;
                         binding.loadingIndicator.setVisibility(View.GONE);
 
-//                        if (response.isSuccessful() && response.body() != null) {
-//                            UserResponse userResponse = response.body();
-//                            if (userResponse.getStatus() == 1 && userResponse.getUser() != null) {
-//                                String avatarPath = userResponse.getUser().getAvatar();
-//                                // Save and load the new avatar path
-//                                sessionManager.saveAvatarPath(avatarPath);
-//                                loadImageFromPath(avatarPath);
-//                                Toasty.success(requireContext(), "Avatar updated successfully").show();
-//                            } else {
-//                                Toasty.error(requireContext(), userResponse.getMessage()).show();
-//                            }
-//                        }
                         if (response.isSuccessful() && response.body() != null) {
                             UserResponse userResponse = response.body();
                             if (userResponse.getStatus() == 1 && userResponse.getUser() != null) {
                                 String avatarPath = userResponse.getUser().getAvatar();
-                                // Save the relative path only
+                                // Simpan path avatar baru
                                 sessionManager.saveAvatarPath(avatarPath);
-                                // Reload the image
+
+                                // Refresh avatar di EditProfileFragment
                                 loadImageFromPath(avatarPath);
+
+                                // Refresh avatar di ProfileFragment
+                                if (getActivity() != null) {
+                                    Fragment parentFragment = getParentFragmentManager()
+                                            .findFragmentById(R.id.nav_host_fragment_activity_home);
+                                    if (parentFragment != null) {
+                                        Fragment profileFragment = parentFragment
+                                                .getChildFragmentManager()
+                                                .findFragmentByTag("ProfileFragment");
+                                        if (profileFragment instanceof ProfileFragment) {
+                                            ((ProfileFragment) profileFragment).refreshAvatar();
+                                        }
+                                    }
+                                }
+
+                                Toasty.success(requireContext(), "Avatar updated successfully").show();
+                            } else {
+                                Toasty.error(requireContext(), userResponse.getMessage()).show();
                             }
-                        }
-                        else {
+                        } else {
                             Toasty.error(requireContext(), "Failed to update avatar").show();
                         }
                     }
@@ -236,6 +242,25 @@ public class EditProfileFragment extends Fragment {
 //        cursor.close();
 //        return result;
 //    }
+
+    public void refreshAvatar() {
+        String avatarPath = sessionManager.getAvatarPath();
+        if (avatarPath != null && !avatarPath.isEmpty()) {
+            String baseUrl = "https://apilumenmobileuas.ndp.my.id/";
+            String fullUrl = avatarPath.startsWith("http") ? avatarPath : baseUrl + avatarPath;
+
+            // Debug log
+            System.out.println("Refreshing avatar from: " + fullUrl);
+
+            Glide.with(requireContext())
+                    .load(fullUrl)
+                    .placeholder(R.drawable.default_avatar)
+                    .error(R.drawable.default_avatar)
+                    .diskCacheStrategy(DiskCacheStrategy.NONE)
+                    .skipMemoryCache(true)
+                    .into(binding.avatarImage);
+        }
+    }
 
 
     private void setupUI() {
@@ -330,7 +355,7 @@ public class EditProfileFragment extends Fragment {
     private void loadImageFromPath(String path) {
         if (path != null && !path.isEmpty()) {
             String fullUrl = path.startsWith("http") ?
-                    path : "https://apilumenmobileuaslinux.ndp.my.id/" + path;
+                    path : "https://apilumenmobileuas.ndp.my.id/" + path;
 
             System.out.println("Loading avatar from: " + fullUrl); // Debug log
 

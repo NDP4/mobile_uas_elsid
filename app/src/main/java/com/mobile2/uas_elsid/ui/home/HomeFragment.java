@@ -12,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
 import com.mobile2.uas_elsid.R;
 
@@ -26,6 +27,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -81,6 +83,7 @@ public class HomeFragment extends Fragment implements CategoryAdapter.OnCategory
     private Set<String> uniqueCategories = new HashSet<>();
     private RecyclerView newArrivalsRecyclerView;
     private ProductAdapter newArrivalsAdapter;
+    private SwipeRefreshLayout swipeRefresh;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -103,6 +106,27 @@ public class HomeFragment extends Fragment implements CategoryAdapter.OnCategory
             Navigation.findNavController(requireView())
                     .navigate(R.id.navigation_product_detail, bundle);
         });
+
+        // Inisialisasi SwipeRefreshLayout
+        swipeRefresh = binding.swipeRefresh;
+        swipeRefresh.setOnRefreshListener(() -> {
+            // Refresh semua data
+//            setupBanner();
+            setupCategories();
+            loadProducts();
+            loadNewArrivals();
+            getCurrentLocation();
+
+            // Hentikan animasi refresh setelah selesai
+            swipeRefresh.setRefreshing(false);
+        });
+
+        // Konfigurasi warna loading indicator
+        swipeRefresh.setColorSchemeResources(
+                R.color.primary,
+                R.color.primary_dark
+        );
+
 
 
 
@@ -174,9 +198,11 @@ public class HomeFragment extends Fragment implements CategoryAdapter.OnCategory
     }
     @Override
     public void onCategoryClick(String category) {
-        // Handle category click here
-        Toasty.info(requireContext(), "Selected category: " + category, Toasty.LENGTH_SHORT).show();
-        // Filter products or perform other actions based on selected category
+        Bundle bundle = new Bundle();
+        bundle.putString("category", category);
+
+        Navigation.findNavController(requireView())
+                .navigate(R.id.navigation_product, bundle); // Langsung navigasi ke navigation_product
     }
 
     private void setupProductAdapters() {
@@ -457,6 +483,7 @@ public class HomeFragment extends Fragment implements CategoryAdapter.OnCategory
                     // Start auto-scroll
                     startBannerAutoScroll();
                 }
+                swipeRefresh.setRefreshing(false);
             }
 
             @Override

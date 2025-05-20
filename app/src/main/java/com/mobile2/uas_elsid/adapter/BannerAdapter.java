@@ -38,7 +38,7 @@ public class BannerAdapter extends RecyclerView.Adapter<BannerAdapter.BannerView
         if (banner.getImages() != null && !banner.getImages().isEmpty()) {
             String imageUrl = banner.getImages().get(0).getImageUrl();
             String fullUrl = imageUrl.startsWith("http") ?
-                    imageUrl : "https://apilumenmobileuaslinux.ndp.my.id/" + imageUrl;
+                    imageUrl : "https://apilumenmobileuas.ndp.my.id/" + imageUrl;
 
             Glide.with(context)
                     .load(fullUrl)

@@ -10,6 +10,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RadioButton;
+import android.widget.RadioGroup;
 
 import com.google.android.material.tabs.TabLayoutMediator;
 import com.mobile2.uas_elsid.R;
@@ -39,6 +40,7 @@ public class ProductDetailFragment extends Fragment {
     private Product currentProduct;
     private ImageSliderAdapter imageSliderAdapter;
     private ReviewAdapter reviewAdapter;
+    private ProductVariant selectedVariant;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
@@ -77,6 +79,12 @@ public class ProductDetailFragment extends Fragment {
                 if (response.isSuccessful() && response.body() != null) {
                     Product product = response.body().getProduct();
                     if (product != null) {
+                        // Log debugging
+                        System.out.println("Product ID: " + product.getId());
+                        System.out.println("Has Variants: " + product.hasVariants());
+                        System.out.println("Variants List: " +
+                                (product.getVariants() != null ? product.getVariants().size() : "null"));
+
                         currentProduct = product;
                         updateUI(product);
                         setupProductDetails(product);
@@ -109,45 +117,106 @@ public class ProductDetailFragment extends Fragment {
         binding.descriptionText.setText(product.getDescription());
         binding.viewCountText.setText(String.format("%d views", product.getViewCount()));
 
-        // Handle price and discount
-        if (product.getDiscount() > 0) {
-            int discountedPrice = product.getPrice() -
-                    (product.getPrice() * product.getDiscount() / 100);
-            binding.mainPriceText.setText(formatPrice(discountedPrice));
-            binding.originalPriceText.setText(formatPrice(product.getPrice()));
-            binding.originalPriceText.setVisibility(View.VISIBLE);
-            binding.discountText.setText(String.format("-%d%%", product.getDiscount()));
-            binding.discountText.setVisibility(View.VISIBLE);
-        } else {
-            binding.mainPriceText.setText(formatPrice(product.getPrice()));
-            binding.originalPriceText.setVisibility(View.GONE);
-            binding.discountText.setVisibility(View.GONE);
-        }
+        // initial price calculation
+        int finalPrice = calculateFinalPrice(product);
+        binding.finalPriceText.setText(formatPrice(finalPrice));
 
-        // Set stock status
-        binding.stockText.setText(String.format("Stock: %d", product.getMainStock()));
+        // set up varian if available
+        setupVariantsView(product);
+
+        // Handle variants if any
+        if (product.hasVariants() && product.getVariants() != null) {
+            setupVariants(product.getVariants());
+        } else {
+            // Handle non-variant product price and stock
+            if (product.getDiscount() > 0) {
+                int discountedPrice = product.getPrice() -
+                        (product.getPrice() * product.getDiscount() / 100);
+                binding.mainPriceText.setText(formatPrice(discountedPrice));
+                binding.originalPriceText.setText(formatPrice(product.getPrice()));
+                binding.originalPriceText.setVisibility(View.VISIBLE);
+                binding.discountText.setText(String.format("-%d%%", product.getDiscount()));
+                binding.discountText.setVisibility(View.VISIBLE);
+            } else {
+                binding.mainPriceText.setText(formatPrice(product.getPrice()));
+                binding.originalPriceText.setVisibility(View.GONE);
+                binding.discountText.setVisibility(View.GONE);
+            }
+            binding.stockText.setText(String.format("Stock: %d", product.getMainStock()));
+            binding.addToCartButton.setEnabled(product.getMainStock() > 0);
+            binding.variantsLayout.setVisibility(View.GONE);
+        }
 
         // Update image slider
         if (product.getImages() != null && !product.getImages().isEmpty()) {
             imageSliderAdapter.setImages(product.getImages());
         }
-
-        // Handle variants if any
-        if (product.hasVariants() && product.getVariants() != null) {
-            setupVariants(product.getVariants());
-        }
     }
 
     private void setupVariants(List<ProductVariant> variants) {
-        binding.variantsLabel.setVisibility(View.VISIBLE);
+        if (variants == null || variants.isEmpty()) {
+            binding.variantsLayout.setVisibility(View.GONE);
+            return;
+        }
+
+        binding.variantsLayout.setVisibility(View.VISIBLE);
         binding.variantsGroup.removeAllViews();
 
+        // Create radio buttons for each variant
         for (ProductVariant variant : variants) {
             RadioButton radioButton = new RadioButton(requireContext());
-            radioButton.setText(variant.getVariantName());
+            radioButton.setText(getVariantText(variant));
             radioButton.setTag(variant);
             binding.variantsGroup.addView(radioButton);
         }
+
+        // Handle variant selection
+        binding.variantsGroup.setOnCheckedChangeListener((group, checkedId) -> {
+            RadioButton selectedButton = group.findViewById(checkedId);
+            if (selectedButton != null) {
+                selectedVariant = (ProductVariant) selectedButton.getTag();
+                updatePriceAndStock(selectedVariant);
+            }
+        });
+
+        // Select first variant by default
+        if (!variants.isEmpty()) {
+            RadioButton firstButton = (RadioButton) binding.variantsGroup.getChildAt(0);
+            firstButton.setChecked(true);
+        }
+    }
+    private void updatePriceAndStock(ProductVariant variant) {
+        // Update price display
+        if (variant.getDiscount() > 0) {
+            int discountedPrice = variant.getPrice() -
+                    (variant.getPrice() * variant.getDiscount() / 100);
+            binding.mainPriceText.setText(formatPrice(discountedPrice));
+            binding.originalPriceText.setText(formatPrice(variant.getPrice()));
+            binding.originalPriceText.setVisibility(View.VISIBLE);
+            binding.discountText.setText(String.format("-%d%%", variant.getDiscount()));
+            binding.discountText.setVisibility(View.VISIBLE);
+        } else {
+            binding.mainPriceText.setText(formatPrice(variant.getPrice()));
+            binding.originalPriceText.setVisibility(View.GONE);
+            binding.discountText.setVisibility(View.GONE);
+        }
+
+        // Update stock status
+        binding.stockText.setText(String.format("Stock: %d", variant.getStock()));
+
+        // Update add to cart button state
+        binding.addToCartButton.setEnabled(variant.getStock() > 0);
+
+        // Update final price
+        int finalPrice = calculateFinalPrice(variant);
+        binding.finalPriceText.setText(formatPrice(finalPrice));
+    }
+    private String getVariantText(ProductVariant variant) {
+        StringBuilder text = new StringBuilder(variant.getVariantName());
+        if (variant.getStock() <= 0) {
+            text.append(" (Out of Stock)");
+        }
+        return text.toString();
     }
 
     private String formatPrice(int price) {
@@ -188,13 +257,66 @@ public class ProductDetailFragment extends Fragment {
     }
 
     private int calculateFinalPrice(Product product) {
-        int basePrice = product.getPrice();
-        int discount = product.getDiscount();
-        if (discount > 0) {
-            return basePrice - (basePrice * discount / 100);
+        // If there's a selected variant, use its price and discount
+        if (selectedVariant != null) {
+            return selectedVariant.getPrice() -
+                    (selectedVariant.getPrice() * selectedVariant.getDiscount() / 100);
         }
-        return basePrice;
+
+        // Otherwise use the main product's price and discount
+        return product.getPrice() - (product.getPrice() * product.getDiscount() / 100);
     }
+
+    private int calculateFinalPrice(ProductVariant variant) {
+        return variant.getPrice() - (variant.getPrice() * variant.getDiscount() / 100);
+    }
+
+
+    // Update UI when variant is selected
+    private void onVariantSelected(ProductVariant variant) {
+        selectedVariant = variant;
+
+        // Update price display
+        int finalPrice = calculateFinalPrice(variant);
+        binding.finalPriceText.setText(formatPrice(finalPrice));
+
+        // Update stock status
+        binding.stockText.setText(String.format("Stock: %d", variant.getStock()));
+
+        // Enable/disable add to cart button based on stock
+        binding.addToCartButton.setEnabled(variant.getStock() > 0);
+    }
+
+    private void setupVariantsView(Product product) {
+        if (product.getVariants() != null && !product.getVariants().isEmpty()) {
+            binding.variantsLayout.setVisibility(View.VISIBLE);
+            binding.variantsLabel.setVisibility(View.VISIBLE);
+
+            RadioGroup variantsGroup = binding.variantsGroup;
+            variantsGroup.removeAllViews();
+
+            for (ProductVariant variant : product.getVariants()) {
+                RadioButton radioButton = new RadioButton(requireContext());
+                radioButton.setText(String.format("%s - %s (%d in stock)",
+                        variant.getVariantName(),
+                        formatPrice(calculateFinalPrice(variant)),
+                        variant.getStock()));
+                radioButton.setTag(variant);
+
+                radioButton.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                    if (isChecked) {
+                        onVariantSelected(variant);
+                    }
+                });
+
+                variantsGroup.addView(radioButton);
+            }
+        } else {
+            binding.variantsLayout.setVisibility(View.GONE);
+            binding.variantsLabel.setVisibility(View.GONE);
+        }
+    }
+
     private void loadReviews(int productId) {
         ApiClient.getClient().getProductReviews(productId).enqueue(new Callback<ReviewResponse>() {
             @Override
