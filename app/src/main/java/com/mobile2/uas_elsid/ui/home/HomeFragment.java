@@ -12,10 +12,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+//import androidx.appcompat.widget.SearchView;
+import android.widget.SearchView;
 import androidx.navigation.NavController;
 import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
 import com.mobile2.uas_elsid.R;
+
 
 import android.os.Handler;
 import android.os.Looper;
@@ -27,6 +30,7 @@ import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
@@ -41,6 +45,7 @@ import com.google.android.gms.tasks.Task;
 import com.mobile2.uas_elsid.adapter.BannerAdapter;
 import com.mobile2.uas_elsid.adapter.CategoryAdapter;
 import com.mobile2.uas_elsid.adapter.ProductAdapter;
+import com.mobile2.uas_elsid.adapter.SearchSuggestionsAdapter;
 import com.mobile2.uas_elsid.api.ApiClient;
 import com.mobile2.uas_elsid.api.response.BannerResponse;
 import com.mobile2.uas_elsid.api.response.ProductResponse;
@@ -59,6 +64,7 @@ import retrofit2.Call;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
+
 import java.util.Date;
 
 import java.io.IOException;
@@ -87,6 +93,8 @@ public class HomeFragment extends Fragment implements CategoryAdapter.OnCategory
     private RecyclerView newArrivalsRecyclerView;
     private ProductAdapter newArrivalsAdapter;
     private SwipeRefreshLayout swipeRefresh;
+    private SearchSuggestionsAdapter searchAdapter;
+    private List<Product> allProducts = new ArrayList<>();
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -147,8 +155,94 @@ public class HomeFragment extends Fragment implements CategoryAdapter.OnCategory
         loadProducts();
         setupCartButton();
         loadNewArrivals();
+        setupSearch();
+        setupSearchViewInteraction();
 
         return binding.getRoot();
+    }
+
+    private void setupSearch() {
+        // Initialize search adapter
+        searchAdapter = new SearchSuggestionsAdapter(requireContext());
+        binding.searchSuggestionsList.setLayoutManager(new LinearLayoutManager(requireContext()));
+        binding.searchSuggestionsList.setAdapter(searchAdapter);
+
+        // Load products for search
+        loadProductsForSearch();
+
+        // Setup click listener
+        searchAdapter.setOnSuggestionClickListener(product -> {
+            Bundle bundle = new Bundle();
+            bundle.putInt("product_id", product.getId());
+            Navigation.findNavController(requireView())
+                    .navigate(R.id.navigation_product_detail, bundle);
+
+            // Clear search and hide suggestions
+            binding.searchView.setQuery("", false);
+            binding.searchView.clearFocus();
+            binding.searchSuggestionsList.setVisibility(View.GONE);
+        });
+
+        // Setup search view listener
+        binding.searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                if (newText.length() > 0) {
+                    binding.searchSuggestionsList.setVisibility(View.VISIBLE);
+                    filterProducts(newText);
+                } else {
+                    binding.searchSuggestionsList.setVisibility(View.GONE);
+                }
+                return true;
+            }
+        });
+    }
+
+    private void loadProductsForSearch() {
+        ApiClient.getClient().getProducts().enqueue(new Callback<ProductResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<ProductResponse> call, @NonNull Response<ProductResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    allProducts = response.body().getProducts();
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ProductResponse> call, @NonNull Throwable t) {
+                Toasty.error(requireContext(), "Failed to load products for search").show();
+            }
+        });
+    }
+
+    private void filterProducts(String query) {
+        if (allProducts == null) return;
+
+        List<Product> filteredList = new ArrayList<>();
+        String lowercaseQuery = query.toLowerCase();
+
+        for (Product product : allProducts) {
+            if (product.getTitle().toLowerCase().contains(lowercaseQuery)) {
+                filteredList.add(product);
+            }
+        }
+
+        searchAdapter.updateSuggestions(filteredList);
+    }
+
+    private void setupSearchViewInteraction() {
+        binding.searchView.setOnSearchClickListener(v -> {
+            binding.searchSuggestionsList.setVisibility(View.VISIBLE);
+        });
+
+        binding.searchView.setOnCloseListener(() -> {
+            binding.searchSuggestionsList.setVisibility(View.GONE);
+            return false;
+        });
     }
 
     private void loadNewArrivals() {
@@ -259,6 +353,10 @@ public class HomeFragment extends Fragment implements CategoryAdapter.OnCategory
         if (ActivityCompat.checkSelfPermission(requireContext(),
                 Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             startLocationUpdates();
+        }
+        if (binding != null) {
+            binding.searchView.setQuery("", false);
+            binding.searchSuggestionsList.setVisibility(View.GONE);
         }
         startBannerAutoScroll();
         updateCartBadge();
