@@ -1,6 +1,7 @@
 package com.mobile2.uas_elsid.api;
 
 import com.mobile2.uas_elsid.api.response.BannerResponse;
+import com.mobile2.uas_elsid.api.response.CartResponse;
 import com.mobile2.uas_elsid.api.response.ProductDetailResponse;
 import com.mobile2.uas_elsid.api.response.ProductResponse;
 import com.mobile2.uas_elsid.api.response.ReviewResponse;
@@ -8,6 +9,7 @@ import com.mobile2.uas_elsid.api.response.UserResponse;
 import com.mobile2.uas_elsid.api.response.request.LoginRequest;
 import com.mobile2.uas_elsid.api.response.request.RegisterRequest;
 import com.mobile2.uas_elsid.api.response.request.ReviewRequest;
+import com.mobile2.uas_elsid.model.CartItem;
 //import com.mobile2.uas_elsid.model.ApiResponse;
 import java.util.Map;
 
@@ -76,4 +78,15 @@ public interface ApiService {
 
     @GET("api/users/{userId}/reviews")
     Call<ReviewResponse> getUserReviews(@Path("userId") int userId);
+
+    @GET("api/cart/{userId}")
+    Call<CartResponse> getCart(@Path("userId") String userId);
+
+    @POST("api/cart")
+    Call<CartResponse> addToCart(@Body Map<String, Object> request);
+    @PUT("api/cart/{id}")
+    Call<CartResponse> updateCartItem(@Path("id") int id, @Body CartItem cartItem);
+
+    @DELETE("api/cart/{id}")
+    Call<CartResponse> removeCartItem(@Path("id") int id);
 }

@@ -20,6 +20,7 @@ import com.mobile2.uas_elsid.api.response.ProductDetailResponse;
 import com.mobile2.uas_elsid.api.response.ProductResponse;
 import com.mobile2.uas_elsid.api.response.ReviewResponse;
 import com.mobile2.uas_elsid.databinding.FragmentProductDetailBinding;
+import com.mobile2.uas_elsid.model.CartItem;
 import com.mobile2.uas_elsid.model.Product;
 import com.mobile2.uas_elsid.model.ProductReview;
 import com.mobile2.uas_elsid.model.ProductVariant;
@@ -28,6 +29,9 @@ import java.text.NumberFormat;
 import java.util.List;
 import java.util.Locale;
 import com.mobile2.uas_elsid.adapter.ImageSliderAdapter;
+import com.mobile2.uas_elsid.utils.CartManager;
+import com.mobile2.uas_elsid.utils.SessionManager;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -41,11 +45,13 @@ public class ProductDetailFragment extends Fragment {
     private ImageSliderAdapter imageSliderAdapter;
     private ReviewAdapter reviewAdapter;
     private ProductVariant selectedVariant;
+    private SessionManager sessionManager;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         binding = FragmentProductDetailBinding.inflate(inflater, container, false);
+        sessionManager = new SessionManager(requireContext());
 
         // Get product ID from arguments
         if (getArguments() != null) {
@@ -58,6 +64,8 @@ public class ProductDetailFragment extends Fragment {
         binding.reviewsRecyclerView.setAdapter(reviewAdapter);
 
         setupImageSlider();
+
+        setupAddToCart();
         return binding.getRoot();
     }
 
@@ -315,6 +323,42 @@ public class ProductDetailFragment extends Fragment {
             binding.variantsLayout.setVisibility(View.GONE);
             binding.variantsLabel.setVisibility(View.GONE);
         }
+    }
+
+    private void setupAddToCart() {
+        binding.addToCartButton.setOnClickListener(v -> {
+            if (!sessionManager.isLoggedIn()) {
+                Toasty.warning(requireContext(), "Please login to add items to cart").show();
+                return;
+            }
+
+            if (currentProduct == null) {
+                Toasty.error(requireContext(), "Product not found").show();
+                return;
+            }
+
+            // Check if product has variants but none selected
+            if (currentProduct.hasVariants() && selectedVariant == null) {
+                Toasty.warning(requireContext(), "Please select a product variant").show();
+                return;
+            }
+
+            // Create cart item
+            CartItem cartItem = new CartItem(currentProduct, selectedVariant, 1);
+
+            // Add to cart
+            CartManager.getInstance(requireContext()).addToCart(cartItem, new CartManager.CartCallback() {
+                @Override
+                public void onSuccess(List<CartItem> items) {
+                    Toasty.success(requireContext(), "Added to cart").show();
+                }
+
+                @Override
+                public void onError(String message) {
+                    Toasty.error(requireContext(), message).show();
+                }
+            });
+        });
     }
 
     private void loadReviews(int productId) {

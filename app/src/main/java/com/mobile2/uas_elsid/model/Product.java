@@ -51,4 +51,5 @@ public class Product {
     public List<ProductImage> getImages() { return images; }
     public List<ProductVariant> getVariants() { return variants; }
     public String getCreatedAt() { return createdAt; }
+
 }
