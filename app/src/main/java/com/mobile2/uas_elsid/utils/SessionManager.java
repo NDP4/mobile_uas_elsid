@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 public class SessionManager {
     private static final String PREF_NAME = "UserSession";
     private static final String KEY_IS_LOGGED_IN = "isLoggedIn";
+    private static final String KEY_IS_GUEST = "isGuest";
     private static final String KEY_USER_ID = "user_id";
     private static final String KEY_FULLNAME = "fullname";
     private static final String KEY_EMAIL = "email";
@@ -15,6 +16,7 @@ public class SessionManager {
     private static final String KEY_PROVINCE = "province";
     private static final String KEY_POSTAL_CODE = "postal_code";
     private static final String KEY_AVATAR = "avatar";
+
 
     private SharedPreferences pref;
     private SharedPreferences.Editor editor;
@@ -27,6 +29,14 @@ public class SessionManager {
         // Debug log
         System.out.println("Debug - Getting UserId from Session: " + userId);
         return userId;
+    }
+    public void setGuestMode(boolean isGuest) {
+        editor.putBoolean(KEY_IS_GUEST, isGuest);
+        editor.commit();
+    }
+
+    public boolean isGuestMode() {
+        return pref.getBoolean(KEY_IS_GUEST, false);
     }
 
     public String getFullname() {
@@ -122,6 +132,7 @@ public class SessionManager {
     public void logout() {
         editor.clear();
 //        editor.commit();
+        editor.putBoolean(KEY_IS_GUEST, false);
         editor.apply(); // menggunakan apply() untuk penyimpanan asynchronous
     }
 }

@@ -315,10 +315,19 @@ public class HomeFragment extends Fragment implements CategoryAdapter.OnCategory
                 .navigate(R.id.navigation_product, bundle); // Langsung navigasi ke navigation_product
     }
 
+//    private void setupProductAdapters() {
+//        newArrivalsAdapter.setOnProductClickListener(product -> {
+//            Bundle bundle = new Bundle();
+//            bundle.putInt("product_id", product.getId());
+//            Navigation.findNavController(requireView())
+//                    .navigate(R.id.navigation_product_detail, bundle);
+//        });
+//    }
     private void setupProductAdapters() {
         newArrivalsAdapter.setOnProductClickListener(product -> {
             Bundle bundle = new Bundle();
             bundle.putInt("product_id", product.getId());
+            bundle.putBoolean("is_guest", !sessionManager.isLoggedIn());
             Navigation.findNavController(requireView())
                     .navigate(R.id.navigation_product_detail, bundle);
         });

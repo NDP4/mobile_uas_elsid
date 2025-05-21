@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
@@ -25,6 +26,27 @@ public class ProfileFragment extends Fragment {
                              ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentProfileBinding.inflate(inflater, container, false);
         sessionManager = new SessionManager(requireContext());
+
+        // Check login status
+        if (!sessionManager.isLoggedIn()) {
+            // Show login dialog
+            new AlertDialog.Builder(requireContext())
+                    .setTitle("Login Required")
+                    .setMessage("Please login to view your profile")
+                    .setPositiveButton("Login", (dialog, which) -> {
+                        // Navigate to login activity
+                        startActivity(new Intent(requireActivity(), LoginActivity.class));
+                        requireActivity().finish();
+                    })
+                    .setNegativeButton("Cancel", (dialog, which) -> {
+                        // Go back to previous screen
+                        requireActivity().onBackPressed();
+                    })
+                    .setCancelable(false)
+                    .show();
+
+            return binding.getRoot();
+        }
 
         setupUserInfo();
         setupButtons();

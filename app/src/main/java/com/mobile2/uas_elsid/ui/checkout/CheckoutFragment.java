@@ -1,12 +1,16 @@
 package com.mobile2.uas_elsid.ui.checkout;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import com.mobile2.uas_elsid.LoginActivity;
 import com.mobile2.uas_elsid.R;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
@@ -36,8 +40,12 @@ public class CheckoutFragment extends Fragment implements CartAdapter.CartItemLi
         binding = FragmentCheckoutBinding.inflate(inflater, container, false);
         sessionManager = new SessionManager(requireContext());
 
+        // Check login status first before setting up the view
+        checkLoginStatus();
+
         if (sessionManager.isLoggedIn()) {
             setupRecyclerView();
+
             setupCheckoutButton();
             updateEmptyState();
         } else {
@@ -45,6 +53,25 @@ public class CheckoutFragment extends Fragment implements CartAdapter.CartItemLi
         }
 
         return binding.getRoot();
+    }
+
+    private void checkLoginStatus() {
+        if (!sessionManager.isLoggedIn()) {
+            new AlertDialog.Builder(requireContext())
+                    .setTitle("Login Required")
+                    .setMessage("Please login to view your profile")
+                    .setPositiveButton("Login", (dialog, which) -> {
+                        // Navigate to login activity
+                        startActivity(new Intent(requireActivity(), LoginActivity.class));
+                        requireActivity().finish();
+                    })
+                    .setNegativeButton("Cancel", (dialog, which) -> {
+                        // Go back to previous screen
+                        requireActivity().onBackPressed();
+                    })
+                    .setCancelable(false)
+                    .show();
+        }
     }
 
     private void showLoginRequired() {

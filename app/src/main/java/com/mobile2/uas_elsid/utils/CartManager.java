@@ -29,6 +29,13 @@ public class CartManager {
     private final ApiService apiService;
     private final SessionManager sessionManager;
     private final Context context;
+    private final String GUEST_CART_PREFS = "guest_cart";
+    private final String GUEST_CART_ITEMS = "guest_cart_items";
+
+    private boolean isGuestMode() {
+        SessionManager sessionManager = new SessionManager(context);
+        return !sessionManager.isLoggedIn();
+    }
 
     // Add CartCallback interface
     public interface CartCallback {
@@ -88,35 +95,79 @@ public class CartManager {
     }
 
     // Update getCartItems method
+//    public void getCartItems(CartCallback callback) {
+//        String userId = sessionManager.getUserId();
+//        if (userId == null || userId.isEmpty()) {
+//            callback.onError("User not logged in");
+//            return;
+//        }
+//
+//
+//        apiService.getCart(userId).enqueue(new Callback<CartResponse>() {
+//            @Override
+//            public void onResponse(Call<CartResponse> call, Response<CartResponse> response) {
+//                if (response.isSuccessful() && response.body() != null) {
+//                    callback.onSuccess(response.body().getCartItems());
+//                } else {
+//                    try {
+//                        String errorBody = response.errorBody() != null ?
+//                                response.errorBody().string() : "Unknown error";
+//                        callback.onError(errorBody);
+//                    } catch (IOException e) {
+//                        callback.onError("Error: " + e.getMessage());
+//                    }
+//                }
+//            }
+//
+//            @Override
+//            public void onFailure(Call<CartResponse> call, Throwable t) {
+//                callback.onError("Network error: " + t.getMessage());
+//            }
+//        });
+//    }
     public void getCartItems(CartCallback callback) {
-        String userId = sessionManager.getUserId();
-        if (userId == null || userId.isEmpty()) {
-            callback.onError("User not logged in");
-            return;
-        }
+        if (isGuestMode()) {
+            // Return guest cart items from SharedPreferences
+            SharedPreferences prefs = context.getSharedPreferences(GUEST_CART_PREFS, Context.MODE_PRIVATE);
+            String guestCartJson = prefs.getString(GUEST_CART_ITEMS, "");
+
+            try {
+                Type type = new TypeToken<List<CartItem>>(){}.getType();
+                List<CartItem> guestItems = new Gson().fromJson(guestCartJson, type);
+                callback.onSuccess(guestItems != null ? guestItems : new ArrayList<>());
+            } catch (Exception e) {
+                callback.onError("Error loading guest cart");
+            }
+        } else {
+            String userId = sessionManager.getUserId();
+            if (userId == null || userId.isEmpty()) {
+                callback.onError("User not logged in");
+                return;
+            }
 
 
-        apiService.getCart(userId).enqueue(new Callback<CartResponse>() {
-            @Override
-            public void onResponse(Call<CartResponse> call, Response<CartResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    callback.onSuccess(response.body().getCartItems());
-                } else {
-                    try {
-                        String errorBody = response.errorBody() != null ?
-                                response.errorBody().string() : "Unknown error";
-                        callback.onError(errorBody);
-                    } catch (IOException e) {
-                        callback.onError("Error: " + e.getMessage());
+            apiService.getCart(userId).enqueue(new Callback<CartResponse>() {
+                @Override
+                public void onResponse(Call<CartResponse> call, Response<CartResponse> response) {
+                    if (response.isSuccessful() && response.body() != null) {
+                        callback.onSuccess(response.body().getCartItems());
+                    } else {
+                        try {
+                            String errorBody = response.errorBody() != null ?
+                                    response.errorBody().string() : "Unknown error";
+                            callback.onError(errorBody);
+                        } catch (IOException e) {
+                            callback.onError("Error: " + e.getMessage());
+                        }
                     }
                 }
-            }
 
-            @Override
-            public void onFailure(Call<CartResponse> call, Throwable t) {
-                callback.onError("Network error: " + t.getMessage());
-            }
-        });
+                @Override
+                public void onFailure(Call<CartResponse> call, Throwable t) {
+                    callback.onError("Network error: " + t.getMessage());
+                }
+            });
+        }
     }
     public void removeFromCart(int cartItemId, CartCallback callback) {
         apiService.removeCartItem(cartItemId).enqueue(new Callback<CartResponse>() {

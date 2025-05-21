@@ -1,8 +1,10 @@
 package com.mobile2.uas_elsid.ui.home;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
@@ -13,6 +15,7 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 
 import com.google.android.material.tabs.TabLayoutMediator;
+import com.mobile2.uas_elsid.LoginActivity;
 import com.mobile2.uas_elsid.R;
 import com.mobile2.uas_elsid.adapter.ReviewAdapter;
 import com.mobile2.uas_elsid.api.ApiClient;
@@ -327,8 +330,24 @@ public class ProductDetailFragment extends Fragment {
 
     private void setupAddToCart() {
         binding.addToCartButton.setOnClickListener(v -> {
+//            if (!sessionManager.isLoggedIn()) {
+//                Toasty.warning(requireContext(), "Please login to add items to cart").show();
+//                return;
+//            }
             if (!sessionManager.isLoggedIn()) {
-                Toasty.warning(requireContext(), "Please login to add items to cart").show();
+                // Show login prompt dialog instead of toast
+                new AlertDialog.Builder(requireContext())
+                        .setTitle("Login Required")
+                        .setMessage("Please login to add items to cart. Would you like to login now?")
+                        .setPositiveButton("Login", (dialog, which) -> {
+                            // Navigate to login
+                            startActivity(new Intent(requireActivity(), LoginActivity.class));
+                        })
+                        .setNegativeButton("Continue as Guest", (dialog, which) -> {
+                            // Allow viewing but not adding to cart
+                            dialog.dismiss();
+                        })
+                        .show();
                 return;
             }
 
