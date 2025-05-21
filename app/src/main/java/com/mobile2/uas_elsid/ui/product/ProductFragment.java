@@ -4,12 +4,18 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.RadioGroup;
+import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.slider.RangeSlider;
 import com.mobile2.uas_elsid.R;
 import com.mobile2.uas_elsid.adapter.ProductAdapter;
 import com.mobile2.uas_elsid.api.ApiClient;
@@ -32,13 +38,18 @@ public class ProductFragment extends Fragment {
     private ProductAdapter productAdapter;
     private ApiService apiService;
     private boolean isLoading = false;
+    public String searchQuery = null; // untuk menyimpan query pencarian
     private String selectedCategory = null; // untuk memilih kategori produk
+    private double minPrice = 0;
+    private double maxPrice = 10000000;
+    private String sortBy = "newest";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             selectedCategory = getArguments().getString("category");
+            searchQuery = getArguments().getString("search_query");
         }
     }
 
@@ -50,6 +61,7 @@ public class ProductFragment extends Fragment {
         setupRecyclerView();
         setupSwipeRefresh();
 //        selectedCategory = null;
+        setupFilterButton();
         loadProducts();
 
         if (selectedCategory != null) {
@@ -58,6 +70,118 @@ public class ProductFragment extends Fragment {
         }
 
         return binding.getRoot();
+    }
+
+    private void setupFilterButton() {
+        binding.filterFab.setOnClickListener(v -> showFilterBottomSheet());
+    }
+    private void showFilterBottomSheet() {
+        View bottomSheetView = getLayoutInflater().inflate(R.layout.layout_filter_bottom_sheet, null);
+        BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
+        dialog.setContentView(bottomSheetView);
+
+        // Initialize views
+        RangeSlider priceRangeSlider = bottomSheetView.findViewById(R.id.priceRangeSlider);
+        TextView minPriceText = bottomSheetView.findViewById(R.id.minPriceText);
+        TextView maxPriceText = bottomSheetView.findViewById(R.id.maxPriceText);
+        RadioGroup sortRadioGroup = bottomSheetView.findViewById(R.id.sortRadioGroup);
+        MaterialButton resetButton = bottomSheetView.findViewById(R.id.resetButton);
+        MaterialButton applyButton = bottomSheetView.findViewById(R.id.applyButton);
+
+        // Set current values
+        priceRangeSlider.setValues((float) minPrice, (float) maxPrice);
+        priceRangeSlider.addOnChangeListener((slider, value, fromUser) -> {
+            List<Float> values = slider.getValues();
+            minPrice = values.get(0);
+            maxPrice = values.get(1);
+            minPriceText.setText(String.format("Rp %,.0f", minPrice));
+            maxPriceText.setText(String.format("Rp %,.0f", maxPrice));
+        });
+
+        // Set current sort selection
+        switch (sortBy) {
+            case "price_asc":
+                sortRadioGroup.check(R.id.sortPriceAsc);
+                break;
+            case "price_desc":
+                sortRadioGroup.check(R.id.sortPriceDesc);
+                break;
+            default:
+                sortRadioGroup.check(R.id.sortNewest);
+                break;
+        }
+
+        // Handle reset
+        resetButton.setOnClickListener(v -> {
+            minPrice = 0;
+            maxPrice = 10000000;
+            sortBy = "newest";
+            priceRangeSlider.setValues((float) minPrice, (float) maxPrice);
+            sortRadioGroup.check(R.id.sortNewest);
+        });
+
+        // Handle apply
+        applyButton.setOnClickListener(v -> {
+            // Get selected sort option
+            int selectedId = sortRadioGroup.getCheckedRadioButtonId();
+            if (selectedId == R.id.sortPriceAsc) {
+                sortBy = "price_asc";
+            } else if (selectedId == R.id.sortPriceDesc) {
+                sortBy = "price_desc";
+            } else {
+                sortBy = "newest";
+            }
+
+            applyFilters();
+            dialog.dismiss();
+        });
+
+        dialog.show();
+    }
+    private void applyFilters() {
+        if (isLoading) return;
+        isLoading = true;
+
+        binding.loadingView.loadingContainer.setVisibility(View.VISIBLE);
+        apiService.getProducts().enqueue(new Callback<ProductResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<ProductResponse> call, @NonNull Response<ProductResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    List<Product> filteredProducts = response.body().getProducts().stream()
+                            .filter(product -> {
+                                double price = product.getPrice();
+                                return price >= minPrice && price <= maxPrice;
+                            })
+                            .collect(Collectors.toList());
+
+                    // Apply sorting
+                    switch (sortBy) {
+                        case "price_asc":
+                            filteredProducts.sort((p1, p2) -> p1.getPrice() - p2.getPrice());
+                            break;
+                        case "price_desc":
+                            filteredProducts.sort((p1, p2) -> p2.getPrice() - p1.getPrice());
+                            break;
+                        default:
+                            // Sort by newest (already in correct order from API)
+                            break;
+                    }
+
+                    productAdapter.setProducts(filteredProducts);
+                    binding.emptyState.setVisibility(filteredProducts.isEmpty() ? View.VISIBLE : View.GONE);
+                }
+
+                binding.loadingView.loadingContainer.setVisibility(View.GONE);
+                isLoading = false;
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ProductResponse> call, @NonNull Throwable t) {
+                binding.loadingView.loadingContainer.setVisibility(View.GONE);
+                isLoading = false;
+                Toasty.error(requireContext(), "Error applying filters: " + t.getMessage()).show();
+            }
+        });
     }
 
     private void setupRecyclerView() {
@@ -102,13 +226,17 @@ public class ProductFragment extends Fragment {
                     List<Product> allProducts = response.body().getProducts();
                     List<Product> filteredProducts;
 
-                    // Filter products if category is selected and not refreshing
-                    if (selectedCategory != null && !binding.swipeRefresh.isRefreshing()) {
+                    // Filter products based on category or search query
+                    if (selectedCategory != null) {
                         filteredProducts = allProducts.stream()
                                 .filter(product -> selectedCategory.equals(product.getCategory()))
                                 .collect(Collectors.toList());
+                    } else if (searchQuery != null && !searchQuery.isEmpty()) {
+                        String query = searchQuery.toLowerCase();
+                        filteredProducts = allProducts.stream()
+                                .filter(product -> product.getTitle().toLowerCase().contains(query))
+                                .collect(Collectors.toList());
                     } else {
-                        // Show all products if no category selected or refreshing
                         filteredProducts = allProducts;
                     }
 

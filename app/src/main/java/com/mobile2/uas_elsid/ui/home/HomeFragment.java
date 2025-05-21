@@ -187,6 +187,16 @@ public class HomeFragment extends Fragment implements CategoryAdapter.OnCategory
         binding.searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
+                // Navigate to ProductFragment with search query
+                Bundle bundle = new Bundle();
+                bundle.putString("search_query", query);
+                Navigation.findNavController(requireView())
+                        .navigate(R.id.navigation_product, bundle);
+
+                // Clear search and hide suggestions
+                binding.searchView.setQuery("", false);
+                binding.searchView.clearFocus();
+                binding.searchSuggestionsList.setVisibility(View.GONE);
                 return true;
             }
 
