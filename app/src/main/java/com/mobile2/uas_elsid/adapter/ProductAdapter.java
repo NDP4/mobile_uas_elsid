@@ -1,6 +1,7 @@
 package com.mobile2.uas_elsid.adapter;
 
 import android.content.Context;
+import android.graphics.Paint;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -64,6 +65,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
             int discountedPrice = product.getPrice() - (product.getPrice() * product.getDiscount() / 100);
             holder.priceText.setText(formatPrice(discountedPrice));
             holder.originalPriceText.setText(formatPrice(product.getPrice()));
+            holder.originalPriceText.setPaintFlags(holder.originalPriceText.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
             holder.originalPriceText.setVisibility(View.VISIBLE);
             holder.discountText.setText(String.format("-%d%%", product.getDiscount()));
             holder.discountText.setVisibility(View.VISIBLE);
@@ -93,8 +95,15 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
                 listener.onProductClick(product);
             }
         });
+    }
 
-
+    public void bindPurchaseCount(Product product, TextView purchaseCountBadge) {
+        if (purchaseCountBadge != null && product.getPurchaseCount() > 0) {
+            purchaseCountBadge.setVisibility(View.VISIBLE);
+            purchaseCountBadge.setText(product.getPurchaseCount() + " terjual");
+        } else {
+            purchaseCountBadge.setVisibility(View.GONE);
+        }
     }
 
     private String formatPrice(int price) {

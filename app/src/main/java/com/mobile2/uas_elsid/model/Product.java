@@ -47,7 +47,13 @@ public class Product {
     public String getStatus() { return status; }
     public boolean hasVariants() { return hasVariants; }
     public int getPurchaseCount() { return purchaseCount; }
-    public int getViewCount() { return viewCount; }
+    public int getViewCount() {
+        return viewCount;
+    }
+
+    public void setViewCount(int viewCount) {
+        this.viewCount = viewCount;
+    }
     public List<ProductImage> getImages() { return images; }
     public List<ProductVariant> getVariants() { return variants; }
     public String getCreatedAt() { return createdAt; }

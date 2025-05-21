@@ -13,6 +13,7 @@ import com.mobile2.uas_elsid.model.CartItem;
 
 import org.json.JSONObject;
 
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.lang.reflect.Type;
 
+import androidx.annotation.NonNull;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -31,6 +33,7 @@ public class CartManager {
     private final Context context;
     private final String GUEST_CART_PREFS = "guest_cart";
     private final String GUEST_CART_ITEMS = "guest_cart_items";
+    private List<CartItem> cartItems = new ArrayList<>();
 
     private boolean isGuestMode() {
         SessionManager sessionManager = new SessionManager(context);
@@ -188,6 +191,29 @@ public class CartManager {
 
             @Override
             public void onFailure(Call<CartResponse> call, Throwable t) {
+                callback.onError("Network error: " + t.getMessage());
+            }
+        });
+    }
+    public void clearCart(CartCallback callback) {
+        if (!sessionManager.isLoggedIn()) {
+            callback.onError("User not logged in");
+            return;
+        }
+
+        ApiClient.getClient().deleteCartItems(sessionManager.getUserId()).enqueue(new Callback<CartResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<CartResponse> call, @NonNull Response<CartResponse> response) {
+                if (response.isSuccessful()) {
+                    cartItems.clear();
+                    callback.onSuccess(cartItems);
+                } else {
+                    callback.onError("Failed to clear cart");
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<CartResponse> call, @NonNull Throwable t) {
                 callback.onError("Network error: " + t.getMessage());
             }
         });

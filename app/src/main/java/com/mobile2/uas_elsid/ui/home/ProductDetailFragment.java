@@ -29,8 +29,11 @@ import com.mobile2.uas_elsid.model.ProductReview;
 import com.mobile2.uas_elsid.model.ProductVariant;
 
 import java.text.NumberFormat;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+
 import com.mobile2.uas_elsid.adapter.ImageSliderAdapter;
 import com.mobile2.uas_elsid.utils.CartManager;
 import com.mobile2.uas_elsid.utils.SessionManager;
@@ -99,6 +102,7 @@ public class ProductDetailFragment extends Fragment {
                         currentProduct = product;
                         updateUI(product);
                         setupProductDetails(product);
+                        updateViewCount(productId);
                     } else {
                         showError("Product not found");
                     }
@@ -110,6 +114,31 @@ public class ProductDetailFragment extends Fragment {
             @Override
             public void onFailure(@NonNull Call<ProductDetailResponse> call, @NonNull Throwable t) {
                 showError("Failed to load product details: " + t.getMessage());
+            }
+        });
+    }
+
+    private void updateViewCount(int productId) {
+        Map<String, Integer> body = new HashMap<>();
+        body.put("product_id", productId);
+
+        ApiClient.getClient().updateProductViewCount(body).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
+                if (response.isSuccessful()) {
+                    // View count updated successfully
+                    // Update the UI if needed
+                    if (currentProduct != null) {
+                        currentProduct.setViewCount(currentProduct.getViewCount() + 1);
+                        binding.viewCountText.setText(String.format("%d views", currentProduct.getViewCount()));
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
+                // Silent fail - don't show error to user since this is not critical
+                System.out.println("Failed to update view count: " + t.getMessage());
             }
         });
     }

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="160dp"
+    android:layout_height="wrap_content"
+    android:layout_margin="4dp"
+    app:cardBackgroundColor="@color/primary"
+    app:cardElevation="1dp"
+    app:cardMaxElevation="1dp"
+    android:stateListAnimator="@null"
+    app:cardPreventCornerOverlap="true"
+    app:cardUseCompatPadding="true"
+    app:cardCornerRadius="12dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="160dp">
+
+            <ImageView
+                android:id="@+id/productImage"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"/>
+
+            <TextView
+                android:id="@+id/purchaseCountBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@color/error"
+                android:padding="4dp"
+                android:textColor="@color/text_white"
+                android:textSize="12sp"
+                android:layout_gravity="end|top"
+                android:layout_margin="8dp"
+                tools:text="100 terjual"/>
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <TextView
+                android:id="@+id/titleText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="14sp"
+                android:textColor="@color/text_white"
+                android:maxLines="2"
+                android:ellipsize="end"
+                tools:text="Product Title"/>
+
+            <TextView
+                android:id="@+id/priceText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_white"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_marginTop="8dp"
+                tools:text="Rp 800.000"/>
+
+        </LinearLayout>
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

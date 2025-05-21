@@ -128,6 +128,7 @@ public class HomeFragment extends Fragment implements CategoryAdapter.OnCategory
             setupCategories();
             loadProducts();
             loadNewArrivals();
+            loadPopularProducts();
             getCurrentLocation();
 
             // Hentikan animasi refresh setelah selesai
@@ -155,6 +156,7 @@ public class HomeFragment extends Fragment implements CategoryAdapter.OnCategory
         loadProducts();
         setupCartButton();
         loadNewArrivals();
+        loadPopularProducts();
         setupSearch();
         setupSearchViewInteraction();
 
@@ -252,6 +254,53 @@ public class HomeFragment extends Fragment implements CategoryAdapter.OnCategory
         binding.searchView.setOnCloseListener(() -> {
             binding.searchSuggestionsList.setVisibility(View.GONE);
             return false;
+        });
+    }
+
+    private void loadPopularProducts() {
+        ApiClient.getClient().getProducts().enqueue(new Callback<ProductResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<ProductResponse> call, @NonNull Response<ProductResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    List<Product> products = response.body().getProducts();
+                    if (products != null && !products.isEmpty()) {
+                        // Sort products by purchase count in descending order
+                        Collections.sort(products, (p1, p2) ->
+                                Integer.compare(p2.getPurchaseCount(), p1.getPurchaseCount()));
+
+                        // Get only the first 2 most popular products
+                        List<Product> popularProducts = products.subList(0, Math.min(products.size(), 2));
+
+                        // Set up grid layout with 2 columns
+                        GridLayoutManager layoutManager = new GridLayoutManager(
+                                requireContext(),
+                                2  // 2 columns
+                        );
+                        binding.terlarisRecyclerView.setLayoutManager(layoutManager);
+
+                        // membuat dan mengatur adapter untuk produk terlaris
+                        ProductAdapter popularProductsAdapter = new ProductAdapter(requireContext());
+                        popularProductsAdapter.setProducts(popularProducts);
+                        binding.terlarisRecyclerView.setAdapter(popularProductsAdapter);
+
+                        // Set click listener
+                        popularProductsAdapter.setOnProductClickListener(product -> {
+                            Bundle bundle = new Bundle();
+                            bundle.putInt("product_id", product.getId());
+                            Navigation.findNavController(requireView())
+                                    .navigate(R.id.navigation_product_detail, bundle);
+                        });
+
+//                        binding.terlarisProductsSection.setVisibility(View.VISIBLE);
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ProductResponse> call, @NonNull Throwable t) {
+                Toasty.error(requireContext(), "Failed to load popular products: " + t.getMessage(),
+                        Toasty.LENGTH_SHORT).show();
+            }
         });
     }
 

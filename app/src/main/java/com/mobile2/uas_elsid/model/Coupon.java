@@ -20,6 +20,20 @@ public class Coupon {
 
     @SerializedName("min_purchase")
     private int minPurchase;
+    @SerializedName("usage_limit")
+    private int usageLimit;
+
+    @SerializedName("used_count")
+    private int usedCount;
+
+    @SerializedName("valid_from")
+    private String validFrom;
+
+    @SerializedName("valid_until")
+    private String validUntil;
+
+    @SerializedName("is_active")
+    private boolean isActive;
 
     // Getters
     public int getId() { return id; }
@@ -28,4 +42,9 @@ public class Coupon {
     public double getDiscountAmount() { return discountAmount; }
     public String getDiscountType() { return discountType; }
     public int getMinPurchase() { return minPurchase; }
+    public int getUsageLimit() { return usageLimit; }
+    public int getUsedCount() { return usedCount; }
+    public String getValidFrom() { return validFrom; }
+    public String getValidUntil() { return validUntil; }
+    public boolean isActive() { return isActive; }
 }

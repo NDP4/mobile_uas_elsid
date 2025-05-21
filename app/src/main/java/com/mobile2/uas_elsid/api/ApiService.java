@@ -4,6 +4,8 @@ import com.mobile2.uas_elsid.api.response.BannerResponse;
 import com.mobile2.uas_elsid.api.response.CartResponse;
 import com.mobile2.uas_elsid.api.response.CityResponse;
 import com.mobile2.uas_elsid.api.response.CouponResponse;
+import com.mobile2.uas_elsid.api.response.OrderResponse;
+import com.mobile2.uas_elsid.api.response.PaymentResponse;
 import com.mobile2.uas_elsid.api.response.ProductDetailResponse;
 import com.mobile2.uas_elsid.api.response.ProductResponse;
 import com.mobile2.uas_elsid.api.response.ProvinceResponse;
@@ -63,8 +65,10 @@ public interface ApiService {
     @GET("api/products/{id}")
     Call<ProductDetailResponse> getProduct(@Path("id") int productId);
 
+//    @POST("api/products/view-count")
+//    Call<ProductResponse> updateViewCount(@Body Map<String, Integer> productId);
     @POST("api/products/view-count")
-    Call<ProductResponse> updateViewCount(@Body Map<String, Integer> productId);
+    Call<Void> updateProductViewCount(@Body Map<String, Integer> body);
 
     @GET("api/products/{productId}/variants")
     Call<ProductResponse> getProductVariants(@Path("productId") int productId);
@@ -104,5 +108,15 @@ public interface ApiService {
     Call<ShippingCostResponse> calculateShipping(@Body Map<String, Object> request);
     @POST("api/coupons/validate")
     Call<CouponResponse> validateCoupon(@Body Map<String, String> request);
+    @POST("api/orders")
+    Call<OrderResponse> createOrder(@Body Map<String, Object> orderData);
+
+    @POST("api/payments/create")
+    Call<PaymentResponse> createPayment(@Body Map<String, Integer> request);
+
+    @GET("api/payments/status/{orderId}")
+    Call<PaymentResponse> checkPaymentStatus(@Path("orderId") int orderId);
+    @DELETE("api/cart/clear/{userId}")
+    Call<CartResponse> deleteCartItems(@Path("userId") String userId);
 
 }

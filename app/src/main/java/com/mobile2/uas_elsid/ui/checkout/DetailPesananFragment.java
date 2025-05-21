@@ -3,6 +3,8 @@ package com.mobile2.uas_elsid.ui.checkout;
 import androidx.appcompat.app.AlertDialog;
 import androidx.lifecycle.ViewModelProvider;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -17,11 +19,14 @@ import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.gson.Gson;
 import com.mobile2.uas_elsid.R;
 import com.mobile2.uas_elsid.adapter.DetailPesananAdapter;
 import com.mobile2.uas_elsid.api.ApiClient;
 import com.mobile2.uas_elsid.api.response.CityResponse;
 import com.mobile2.uas_elsid.api.response.CouponResponse;
+import com.mobile2.uas_elsid.api.response.OrderResponse;
+import com.mobile2.uas_elsid.api.response.PaymentResponse;
 import com.mobile2.uas_elsid.api.response.ProvinceResponse;
 import com.mobile2.uas_elsid.api.response.ShippingCostResponse;
 import com.mobile2.uas_elsid.databinding.FragmentDetailPesananBinding;
@@ -117,50 +122,112 @@ public class DetailPesananFragment extends Fragment {
         });
     }
 
-    private void applyCoupon(String code) {
-        if (activeCoupon != null) {
-            // Cancel coupon
-            activeCoupon = null;
-            binding.couponInput.setText("");
-            binding.couponInput.setEnabled(true); // Enable input when canceling
-            binding.applyCouponButton.setText("Apply");
-            binding.discountContainer.setVisibility(View.GONE);
-            calculateTotals();
-            return;
-        }
+//    private void applyCoupon(String code) {
+//        if (activeCoupon != null) {
+//            // Cancel coupon
+//            activeCoupon = null;
+//            binding.couponInput.setText("");
+//            binding.couponInput.setEnabled(true); // Enable input when canceling
+//            binding.applyCouponButton.setText("Apply");
+//            binding.discountContainer.setVisibility(View.GONE);
+//            calculateTotals();
+//            return;
+//        }
+//
+//        Map<String, String> request = new HashMap<>();
+//        request.put("code", code);
+//        request.put("user_id", sessionManager.getUserId());
+//        request.put("subtotal", String.valueOf(calculateSubtotal()));
+//
+//        ApiClient.getClient().validateCoupon(request).enqueue(new Callback<CouponResponse>() {
+//            @Override
+//            public void onResponse(Call<CouponResponse> call, Response<CouponResponse> response) {
+//                if (response.isSuccessful() && response.body() != null && response.body().getCoupon() != null) {
+//                    Coupon coupon = response.body().getCoupon();
+//                    int subtotal = calculateSubtotal();
+//
+//                    if (subtotal >= coupon.getMinPurchase()) {
+//                        activeCoupon = coupon;
+//                        binding.applyCouponButton.setText("Cancel");
+//                        binding.couponInput.setEnabled(false); // Disable input when coupon applied
+//                        binding.discountContainer.setVisibility(View.VISIBLE);
+//                        calculateTotals();
+//                        Toasty.success(requireContext(), "Coupon applied successfully!").show();
+//                    } else {
+//                        Toasty.error(requireContext(),
+//                                "Minimum purchase amount: " + formatPrice(coupon.getMinPurchase())).show();
+//                    }
+//                }  else {
+//                    // Simplified error message
+//                    Toasty.error(requireContext(), "Invalid coupon code").show();
+//                }
+//            }
+//
+//            @Override
+//            public void onFailure(Call<CouponResponse> call, Throwable t) {
+//                Toasty.error(requireContext(), "Failed to validate coupon: " + t.getMessage()).show();
+//            }
+//        });
+//    }
 
+    private void applyCoupon(String code) {
         Map<String, String> request = new HashMap<>();
         request.put("code", code);
         request.put("user_id", sessionManager.getUserId());
-        request.put("subtotal", String.valueOf(calculateSubtotal()));
 
         ApiClient.getClient().validateCoupon(request).enqueue(new Callback<CouponResponse>() {
             @Override
-            public void onResponse(Call<CouponResponse> call, Response<CouponResponse> response) {
-                if (response.isSuccessful() && response.body() != null && response.body().getCoupon() != null) {
+            public void onResponse(@NonNull Call<CouponResponse> call, @NonNull Response<CouponResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
                     Coupon coupon = response.body().getCoupon();
-                    int subtotal = calculateSubtotal();
 
-                    if (subtotal >= coupon.getMinPurchase()) {
-                        activeCoupon = coupon;
-                        binding.applyCouponButton.setText("Cancel");
-                        binding.couponInput.setEnabled(false); // Disable input when coupon applied
-                        binding.discountContainer.setVisibility(View.VISIBLE);
-                        calculateTotals();
-                        Toasty.success(requireContext(), "Coupon applied successfully!").show();
-                    } else {
-                        Toasty.error(requireContext(),
-                                "Minimum purchase amount: " + formatPrice(coupon.getMinPurchase())).show();
+                    // Validate coupon
+                    if (!coupon.isActive()) {
+                        Toasty.error(requireContext(), "This coupon is no longer active").show();
+                        return;
                     }
-                }  else {
-                    // Simplified error message
-                    Toasty.error(requireContext(), "Invalid coupon code").show();
+
+                    // Check usage limit
+                    if (coupon.getUsedCount() >= coupon.getUsageLimit()) {
+                        Toasty.error(requireContext(), "This coupon has reached its usage limit").show();
+                        return;
+                    }
+
+                    // Check validity period
+                    try {
+                        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'");
+                        java.util.Date now = new java.util.Date();
+                        java.util.Date validFrom = sdf.parse(coupon.getValidFrom());
+                        java.util.Date validUntil = sdf.parse(coupon.getValidUntil());
+
+                        if (now.before(validFrom) || now.after(validUntil)) {
+                            Toasty.error(requireContext(), "This coupon is not valid at this time").show();
+                            return;
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    // Apply valid coupon
+                    activeCoupon = coupon;
+                    binding.couponInput.setEnabled(false);
+                    binding.applyCouponButton.setText("Remove");
+                    calculateTotals();
+
+                    Toasty.success(requireContext(), "Coupon applied successfully").show();
+                } else {
+                    try {
+                        String errorBody = response.errorBody() != null ? response.errorBody().string() : "Unknown error";
+                        Toasty.error(requireContext(), errorBody).show();
+                    } catch (IOException e) {
+                        Toasty.error(requireContext(), "Error applying coupon").show();
+                    }
                 }
             }
 
             @Override
-            public void onFailure(Call<CouponResponse> call, Throwable t) {
-                Toasty.error(requireContext(), "Failed to validate coupon: " + t.getMessage()).show();
+            public void onFailure(@NonNull Call<CouponResponse> call, @NonNull Throwable t) {
+                Toasty.error(requireContext(), "Network error: " + t.getMessage()).show();
             }
         });
     }
@@ -277,7 +344,9 @@ public class DetailPesananFragment extends Fragment {
         AutoCompleteTextView provinceSpinner = dialogView.findViewById(R.id.provinceSpinner);
         AutoCompleteTextView citySpinner = dialogView.findViewById(R.id.citySpinner);
         AutoCompleteTextView courierSpinner = dialogView.findViewById(R.id.courierSpinner);
+        TextInputEditText postalCodeInput = dialogView.findViewById(R.id.postalCodeInput);
         TextInputEditText addressInput = dialogView.findViewById(R.id.addressInput);
+
 
         // Setup adapters
         ArrayAdapter<String> provinceAdapter = new ArrayAdapter<>(requireContext(),
@@ -407,9 +476,11 @@ public class DetailPesananFragment extends Fragment {
                     String city = citySpinner.getText().toString();
                     String province = provinceSpinner.getText().toString();
                     String courier = courierSpinner.getText().toString();
+                    String postalCode = postalCodeInput.getText().toString();
 
-                    if (address.isEmpty() || city.isEmpty() || province.isEmpty() || courier.isEmpty()) {
-                        Toasty.error(requireContext(), "Please fill all fields").show();
+                    if (address.isEmpty() || city.isEmpty() || province.isEmpty() ||
+                            courier.isEmpty() || postalCode.isEmpty()) {
+                        Toasty.error(requireContext(), "Please fill all fields including postal code").show();
                         return;
                     }
 
@@ -419,7 +490,8 @@ public class DetailPesananFragment extends Fragment {
                             address,
                             city,
                             province,
-                            sessionManager.getPostalCode()
+                            postalCode
+//                            sessionManager.getPostalCode()
                     );
 
                     setupAddressSection();
@@ -432,9 +504,179 @@ public class DetailPesananFragment extends Fragment {
 
     private void setupCheckoutButton() {
         binding.checkoutButton.setOnClickListener(v -> {
-            // Implement checkout process
+            // Validate address
+            if (sessionManager.getAddress() == null || sessionManager.getCity() == null ||
+                    sessionManager.getProvince() == null || sessionManager.getPostalCode() == null) {
+                Toasty.warning(requireContext(), "Please set your delivery address").show();
+                return;
+            }
+
+            // Show confirmation dialog
+            new AlertDialog.Builder(requireContext())
+                    .setTitle("Confirm Order")
+                    .setMessage("Proceed with payment?")
+                    .setPositiveButton("Yes", (dialog, which) -> handleCheckout())
+                    .setNegativeButton("No", null)
+                    .show();
         });
     }
+
+
+    private void handleCheckout() {
+        Map<String, Object> orderData = new HashMap<>();
+        orderData.put("user_id", sessionManager.getUserId());
+        orderData.put("shipping_address", sessionManager.getAddress());
+        orderData.put("shipping_city", sessionManager.getCity());
+        orderData.put("shipping_province", sessionManager.getProvince());
+        orderData.put("shipping_postal_code", sessionManager.getPostalCode());
+        orderData.put("shipping_cost", shippingCost);
+        orderData.put("courier", "jne");
+        orderData.put("courier_service", "reg");
+
+        // Convert cart items to JSON string
+        List<Map<String, Object>> itemsList = new ArrayList<>();
+        for (CartItem item : adapter.getItems()) {
+            Map<String, Object> itemMap = new HashMap<>();
+            itemMap.put("product_id", item.getProduct().getId());
+            itemMap.put("quantity", item.getQuantity());
+            if (item.getVariant() != null) {
+                itemMap.put("variant_id", item.getVariant().getId());
+            }
+            itemsList.add(itemMap);
+        }
+        orderData.put("items", new Gson().toJson(itemsList));
+
+        ApiClient.getClient().createOrder(orderData).enqueue(new Callback<OrderResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<OrderResponse> call, @NonNull Response<OrderResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    // Create payment for the order
+                    Map<String, Integer> paymentRequest = new HashMap<>();
+                    paymentRequest.put("order_id", response.body().getOrder().getId());
+
+                    ApiClient.getClient().createPayment(paymentRequest).enqueue(new Callback<PaymentResponse>() {
+                        @Override
+                        public void onResponse(@NonNull Call<PaymentResponse> call, @NonNull Response<PaymentResponse> response) {
+                            if (response.isSuccessful() && response.body() != null) {
+                                String paymentUrl = response.body().getData().getPaymentUrl();
+
+                                // Launch WebView Activity
+                                Intent intent = new Intent(requireContext(), PaymentWebViewActivity.class);
+                                intent.putExtra("payment_url", paymentUrl);
+                                startActivity(intent);
+
+                                // Clear cart after successful order
+                                cartManager.clearCart(new CartManager.CartCallback() {
+                                    @Override
+                                    public void onSuccess(List<CartItem> items) {
+                                        // Cart cleared successfully
+                                        requireActivity().finish();
+                                    }
+
+                                    @Override
+                                    public void onError(String message) {
+                                        Toasty.error(requireContext(), "Failed to clear cart: " + message).show();
+                                    }
+                                });
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(@NonNull Call<PaymentResponse> call, @NonNull Throwable t) {
+                            Toasty.error(requireContext(), "Payment creation failed: " + t.getMessage()).show();
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<OrderResponse> call, @NonNull Throwable t) {
+                Toasty.error(requireContext(), "Order creation failed: " + t.getMessage()).show();
+            }
+        });
+    }
+
+//    private void createOrder() {
+//        // Prepare order items
+//        List<Map<String, Object>> items = new ArrayList<>();
+//        for (CartItem item : adapter.getItems()) {
+//            Map<String, Object> orderItem = new HashMap<>();
+//            orderItem.put("product_id", item.getProduct().getId());
+//            if (item.getVariant() != null) {
+//                orderItem.put("variant_id", item.getVariant().getId());
+//            }
+//            orderItem.put("quantity", item.getQuantity());
+//            items.add(orderItem);
+//        }
+//
+//        // Prepare order data
+//        Map<String, Object> orderData = new HashMap<>();
+//        orderData.put("user_id", sessionManager.getUserId());
+//        orderData.put("items", new Gson().toJson(items));
+//        orderData.put("shipping_address", sessionManager.getAddress());
+//        orderData.put("shipping_city", sessionManager.getCity());
+//        orderData.put("shipping_province", sessionManager.getProvince());
+//        orderData.put("shipping_postal_code", sessionManager.getPostalCode());
+//        orderData.put("shipping_cost", shippingCost);
+//        orderData.put("courier", "jne"); // Replace with selected courier
+//        orderData.put("courier_service", "reg"); // Replace with selected service
+//
+//        // Create order
+//        ApiClient.getClient().createOrder(orderData).enqueue(new Callback<OrderResponse>() {
+//            @Override
+//            public void onResponse(@NonNull Call<OrderResponse> call,
+//                                   @NonNull Response<OrderResponse> response) {
+//                if (response.isSuccessful() && response.body() != null) {
+//                    // Initiate payment
+//                    initiatePayment(response.body().getOrder().getId());
+//                } else {
+//                    Toasty.error(requireContext(), "Failed to create order").show();
+//                }
+//            }
+//
+//            @Override
+//            public void onFailure(@NonNull Call<OrderResponse> call, @NonNull Throwable t) {
+//                Toasty.error(requireContext(), "Network error: " + t.getMessage()).show();
+//            }
+//        });
+//    }
+//    private void initiatePayment(int orderId) {
+//        Map<String, Integer> request = new HashMap<>();
+//        request.put("order_id", orderId);
+//
+//        ApiClient.getClient().createPayment(request).enqueue(new Callback<PaymentResponse>() {
+//            @Override
+//            public void onResponse(@NonNull Call<PaymentResponse> call, @NonNull Response<PaymentResponse> response) {
+//                if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
+//                    // Open payment URL in browser
+//                    String paymentUrl = response.body().getData().getPaymentUrl();
+//                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(paymentUrl));
+//                    startActivity(intent);
+//
+//                    // Clear cart after successful order
+//                    cartManager.clearCart(new CartManager.CartCallback() {
+//                        @Override
+//                        public void onSuccess(List<CartItem> items) {
+//                            // Cart cleared successfully
+//                            requireActivity().finish();
+//                        }
+//
+//                        @Override
+//                        public void onError(String message) {
+//                            Toasty.error(requireContext(), message).show();
+//                        }
+//                    });
+//                } else {
+//                    Toasty.error(requireContext(), "Failed to initiate payment").show();
+//                }
+//            }
+//
+//            @Override
+//            public void onFailure(@NonNull Call<PaymentResponse> call, @NonNull Throwable t) {
+//                Toasty.error(requireContext(), "Network error: " + t.getMessage()).show();
+//            }
+//        });
+//    }
 
     @Override
     public void onDestroyView() {

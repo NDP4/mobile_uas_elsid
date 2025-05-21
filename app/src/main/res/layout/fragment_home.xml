@@ -186,9 +186,6 @@
                     android:layout_height="match_parent" />
             </androidx.cardview.widget.CardView>
 
-
-
-
             <!-- Category Section -->
             <TextView
                 android:id="@+id/categoryTitle"
@@ -236,14 +233,7 @@
                 tools:spanCount="2"
                 tools:layoutManager="androidx.recyclerview.widget.GridLayoutManager" />
 
-            <!-- Unavailable Products Section -->
-            <LinearLayout
-                android:id="@+id/terlarisProductsSection"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
+            <!-- terlaris Products Section -->
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -251,6 +241,7 @@
                     android:textColor="@color/text_primary"
                     android:textSize="12sp"
                     android:textStyle="bold"
+                    android:layout_marginStart="16dp"
                     android:layout_marginBottom="8dp"/>
 
                 <androidx.recyclerview.widget.RecyclerView
@@ -258,11 +249,13 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:clipToPadding="false"
-                    android:orientation="horizontal"
-                    android:paddingStart="4dp"
-                    android:paddingEnd="4dp"/>
+                    android:layout_marginHorizontal="4dp"
+                    android:paddingBottom="16dp"
+                    tools:listitem="@layout/item_product"
+                    tools:itemCount="2"
+                    tools:spanCount="2"
+                    tools:layoutManager="androidx.recyclerview.widget.GridLayoutManager" />
 
-            </LinearLayout>
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
