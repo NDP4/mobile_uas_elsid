@@ -157,6 +157,13 @@ public class ProductDetailFragment extends Fragment {
         binding.descriptionText.setText(product.getDescription());
         binding.viewCountText.setText(String.format("%d views", product.getViewCount()));
 
+        if (product.getPurchaseCount() > 0) {
+            binding.purchaseCountText.setText(String.format("%d sold", product.getPurchaseCount()));
+            binding.purchaseCountText.setVisibility(View.VISIBLE);
+        } else {
+            binding.purchaseCountText.setVisibility(View.GONE);
+        }
+
         // initial price calculation
         int finalPrice = calculateFinalPrice(product);
         binding.finalPriceText.setText(formatPrice(finalPrice));

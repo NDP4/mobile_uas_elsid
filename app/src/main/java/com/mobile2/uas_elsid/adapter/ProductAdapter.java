@@ -56,6 +56,15 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
         // Set view count
         holder.viewCountText.setText(String.format(Locale.getDefault(), "%d views", product.getViewCount()));
 
+        // Set purchase count
+        if (product.getPurchaseCount() > 0) {
+            holder.purchaseCountText.setText(String.format("%d sold", product.getPurchaseCount()));
+            holder.purchaseCountText.setVisibility(View.VISIBLE);
+        } else {
+            holder.purchaseCountText.setVisibility(View.GONE);
+        }
+
+
         // Format price in Indonesian Rupiah
         NumberFormat rupiahFormat = NumberFormat.getCurrencyInstance(new Locale("id", "ID"));
         holder.priceText.setText(rupiahFormat.format(product.getPrice()));
@@ -127,6 +136,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
         ImageView productImage;
         TextView titleText, categoryText, viewCountText, priceText;
         TextView originalPriceText, discountText, soldOutLabel;
+        TextView purchaseCountText;
 
         ViewHolder(View itemView) {
             super(itemView);
@@ -134,6 +144,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
             titleText = itemView.findViewById(R.id.titleText);
             categoryText = itemView.findViewById(R.id.categoryText);
             viewCountText = itemView.findViewById(R.id.viewCountText);
+            purchaseCountText = itemView.findViewById(R.id.purchaseCountText);
             priceText = itemView.findViewById(R.id.priceText);
             originalPriceText = itemView.findViewById(R.id.originalPriceText);
             discountText = itemView.findViewById(R.id.discountText);

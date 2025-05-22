@@ -10,6 +10,8 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavDirections;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import android.view.LayoutInflater;
@@ -254,46 +256,43 @@ public class DetailPesananFragment extends Fragment {
 
 
     private void calculateTotals() {
+        // Hitung subtotal sekali saja
         int subtotal = calculateSubtotal();
         int discount = 0;
-//        int subtotal = 0;
         totalWeight = 0;
 
+        // Hitung total berat untuk shipping
+        for (CartItem item : adapter.getItems()) {
+            totalWeight += item.getProduct().getWeight() * item.getQuantity();
+        }
+
+        // Hitung diskon jika ada coupon aktif
         if (activeCoupon != null) {
             if ("percentage".equals(activeCoupon.getDiscountType())) {
                 discount = (int) (subtotal * (activeCoupon.getDiscountAmount() / 100.0));
             } else {
                 discount = (int) activeCoupon.getDiscountAmount();
             }
+            binding.discountContainer.setVisibility(View.VISIBLE);
             binding.discountText.setText("-" + formatPrice(discount));
+        } else {
+            binding.discountContainer.setVisibility(View.GONE);
         }
 
-        for (CartItem item : adapter.getItems()) {
-            int itemPrice;
-            if (item.getVariant() != null) {
-                itemPrice = calculatePrice(
-                        item.getVariant().getPrice(),
-                        item.getVariant().getDiscount(),
-                        item.getQuantity()
-                );
-                totalWeight += item.getProduct().getWeight() * item.getQuantity();
-            } else {
-                itemPrice = calculatePrice(
-                        item.getProduct().getPrice(),
-                        item.getProduct().getDiscount(),
-                        item.getQuantity()
-                );
-                totalWeight += item.getProduct().getWeight() * item.getQuantity();
-            }
-            subtotal += itemPrice;
-        }
-
+        // Hitung total
         int total = subtotal + shippingCost - discount;
 
+        // Update UI
         binding.subtotalText.setText(formatPrice(subtotal));
         binding.shippingText.setText(formatPrice(shippingCost));
         binding.totalText.setText(formatPrice(total));
         binding.bottomTotalText.setText(formatPrice(total));
+    }
+
+    // Method terpisah untuk menghitung harga per item
+    private int calculatePrice(int basePrice, int discount, int quantity) {
+        int discountedPrice = basePrice - (basePrice * discount / 100);
+        return discountedPrice * quantity;
     }
     private void calculateShipping(String origin, String destination, int weight, String courier) {
         Map<String, Object> request = new HashMap<>();
@@ -327,10 +326,7 @@ public class DetailPesananFragment extends Fragment {
             }
         });
     }
-    private int calculatePrice(int basePrice, int discount, int quantity) {
-        int discountedPrice = basePrice - (basePrice * discount / 100);
-        return discountedPrice * quantity;
-    }
+
     private String formatPrice(int price) {
         NumberFormat rupiahFormat = NumberFormat.getCurrencyInstance(new Locale("id", "ID"));
         String formatted = rupiahFormat.format(price);
@@ -523,6 +519,11 @@ public class DetailPesananFragment extends Fragment {
 
 
     private void handleCheckout() {
+        String totaltext = binding.totalText.getText().toString();
+        String numericTotal = totaltext.replaceAll("[^0-9]", "");
+        int totalAmount = Integer.parseInt(numericTotal);
+
+        // Create order data
         Map<String, Object> orderData = new HashMap<>();
         orderData.put("user_id", sessionManager.getUserId());
         orderData.put("shipping_address", sessionManager.getAddress());
@@ -530,8 +531,15 @@ public class DetailPesananFragment extends Fragment {
         orderData.put("shipping_province", sessionManager.getProvince());
         orderData.put("shipping_postal_code", sessionManager.getPostalCode());
         orderData.put("shipping_cost", shippingCost);
+        orderData.put("total_amount", totalAmount);
         orderData.put("courier", "jne");
         orderData.put("courier_service", "reg");
+
+        // tambahkan jika ada coupon
+        if (activeCoupon != null) {
+            orderData.put("coupon_code", activeCoupon.getId());
+            orderData.put("discount_amount", activeCoupon.getDiscountAmount());
+        }
 
         // Convert cart items to JSON string
         List<Map<String, Object>> itemsList = new ArrayList<>();
@@ -550,9 +558,9 @@ public class DetailPesananFragment extends Fragment {
             @Override
             public void onResponse(@NonNull Call<OrderResponse> call, @NonNull Response<OrderResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    // Create payment for the order
                     Map<String, Integer> paymentRequest = new HashMap<>();
                     paymentRequest.put("order_id", response.body().getOrder().getId());
+                    paymentRequest.put("total_amount", totalAmount);
 
                     ApiClient.getClient().createPayment(paymentRequest).enqueue(new Callback<PaymentResponse>() {
                         @Override
@@ -560,17 +568,17 @@ public class DetailPesananFragment extends Fragment {
                             if (response.isSuccessful() && response.body() != null) {
                                 String paymentUrl = response.body().getData().getPaymentUrl();
 
-                                // Launch WebView Activity
-                                Intent intent = new Intent(requireContext(), PaymentWebViewActivity.class);
-                                intent.putExtra("payment_url", paymentUrl);
-                                startActivity(intent);
+                                // Navigate to payment webview fragment
+                                Bundle args = new Bundle();
+                                args.putString("payment_url", paymentUrl);
+                                Navigation.findNavController(requireView())
+                                        .navigate(R.id.action_navigation_detail_pesanan_to_navigation_payment_webview, args);
 
                                 // Clear cart after successful order
                                 cartManager.clearCart(new CartManager.CartCallback() {
                                     @Override
                                     public void onSuccess(List<CartItem> items) {
                                         // Cart cleared successfully
-                                        requireActivity().finish();
                                     }
 
                                     @Override

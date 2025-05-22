@@ -236,8 +236,8 @@
                 android:id="@+id/checkoutButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Checkout"
-                app:cornerRadius="24dp"/>
+                android:text="Payment"
+                app:cornerRadius="24dp" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

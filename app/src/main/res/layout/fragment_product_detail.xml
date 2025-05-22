@@ -73,6 +73,27 @@
                         android:layout_marginStart="4dp"/>
                 </LinearLayout>
 
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="8dp">
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:src="@drawable/ic_cart"
+                        app:tint="@color/text_secondary"/>
+
+                    <TextView
+                        android:id="@+id/purchaseCountText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="14sp"
+                        android:layout_marginStart="4dp"/>
+                </LinearLayout>
+
                 <TextView
                     android:id="@+id/titleText"
                     android:layout_width="match_parent"
