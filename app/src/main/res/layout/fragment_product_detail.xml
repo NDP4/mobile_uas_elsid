@@ -19,10 +19,26 @@
             android:orientation="vertical">
 
             <!-- Image Slider Section with Rounded Corners -->
-            <androidx.viewpager2.widget.ViewPager2
-                android:id="@+id/imageSlider"
+            <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="450dp" />
+                android:layout_height="450dp">
+
+                <androidx.viewpager2.widget.ViewPager2
+                    android:id="@+id/imageSlider"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/wishlistButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end|top"
+                    android:layout_margin="16dp"
+                    app:fabSize="mini"
+                    app:srcCompat="@drawable/ic_favorite_border"
+                    app:tint="@color/error"
+                    app:backgroundTint="@color/background"/>
+            </FrameLayout>
 
             <com.google.android.material.tabs.TabLayout
                 android:id="@+id/imageIndicator"

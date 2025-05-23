@@ -9,29 +9,49 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.mobile2.uas_elsid.R;
+import com.mobile2.uas_elsid.api.ApiClient;
+import com.mobile2.uas_elsid.api.ApiService;
+import com.mobile2.uas_elsid.api.response.WishlistCheckResponse;
+import com.mobile2.uas_elsid.api.response.WishlistResponse;
 import com.mobile2.uas_elsid.model.Product;
-import com.mobile2.uas_elsid.model.ProductImage;
+import com.mobile2.uas_elsid.utils.SessionManager;
 
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+
+import es.dmoral.toasty.Toasty;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHolder> {
     private final Context context;
     private List<Product> products = new ArrayList<>();
+    private ApiService apiService;
+    private SessionManager sessionManager;
 
     public ProductAdapter(Context context) {
         this.context = context;
+        this.sessionManager = new SessionManager(context);
+        this.apiService = ApiClient.getClient();
     }
+
     public interface OnProductClickListener {
         void onProductClick(Product product);
     }
+
     private OnProductClickListener listener;
+
     public void setOnProductClickListener(OnProductClickListener listener) {
         this.listener = listener;
     }
@@ -47,16 +67,10 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Product product = products.get(position);
 
-        // Set product title
         holder.titleText.setText(product.getTitle());
-
-        // Set category
         holder.categoryText.setText(product.getCategory());
-
-        // Set view count
         holder.viewCountText.setText(String.format(Locale.getDefault(), "%d views", product.getViewCount()));
 
-        // Set purchase count
         if (product.getPurchaseCount() > 0) {
             holder.purchaseCountText.setText(String.format("%d sold", product.getPurchaseCount()));
             holder.purchaseCountText.setVisibility(View.VISIBLE);
@@ -64,12 +78,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
             holder.purchaseCountText.setVisibility(View.GONE);
         }
 
-
-        // Format price in Indonesian Rupiah
-        NumberFormat rupiahFormat = NumberFormat.getCurrencyInstance(new Locale("id", "ID"));
-        holder.priceText.setText(rupiahFormat.format(product.getPrice()));
-
-        // Handle discount if any
+        // Price formatting
         if (product.getDiscount() > 0) {
             int discountedPrice = product.getPrice() - (product.getPrice() * product.getDiscount() / 100);
             holder.priceText.setText(formatPrice(discountedPrice));
@@ -84,41 +93,148 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
             holder.discountText.setVisibility(View.GONE);
         }
 
-        // Load product image
-        if (!product.getImages().isEmpty()) {
-            ProductImage firstImage = product.getImages().get(0);
-            String imageUrl = "https://apilumenmobileuas.ndp.my.id/" + firstImage.getImageUrl();
+        // Image loading
+        if (product.getImages() != null && !product.getImages().isEmpty()) {
+            String imageUrl = "https://apilumenmobileuas.ndp.my.id/" + product.getImages().get(0).getImageUrl();
+            System.out.println("Debug - Image URL: " + imageUrl);
             Glide.with(context)
                     .load(imageUrl)
                     .placeholder(R.drawable.placeholder_image)
                     .error(R.drawable.error_image)
                     .into(holder.productImage);
+        } else {
+            System.out.println("Debug - No images for product: " + product.getId());
+            holder.productImage.setImageResource(R.drawable.placeholder_image);
         }
 
-        // Show sold out label if stock is 0
         holder.soldOutLabel.setVisibility(product.getMainStock() == 0 ? View.VISIBLE : View.GONE);
 
-        // Set click listener for the item
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) {
                 listener.onProductClick(product);
             }
         });
+
+        // Wishlist button setup
+        setupWishlistButton(holder, product);
     }
 
-    public void bindPurchaseCount(Product product, TextView purchaseCountBadge) {
-        if (purchaseCountBadge != null && product.getPurchaseCount() > 0) {
-            purchaseCountBadge.setVisibility(View.VISIBLE);
-            purchaseCountBadge.setText(product.getPurchaseCount() + " terjual");
-        } else {
-            purchaseCountBadge.setVisibility(View.GONE);
+    private void setupWishlistButton(@NonNull ViewHolder holder, Product product) {
+        if (!sessionManager.isLoggedIn()) {
+            holder.wishlistButton.setVisibility(View.GONE);
+            return;
         }
+
+        holder.wishlistButton.setVisibility(View.VISIBLE);
+
+        apiService.checkWishlist(sessionManager.getUserId(), product.getId())
+                .enqueue(new Callback<WishlistCheckResponse>() {
+                    @Override
+                    public void onResponse(@NonNull Call<WishlistCheckResponse> call,
+                                           @NonNull Response<WishlistCheckResponse> response) {
+                        if (response.isSuccessful() && response.body() != null) {
+                            boolean isInWishlist = response.body().isExists();
+                            updateWishlistButtonState(holder.wishlistButton, isInWishlist);
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(@NonNull Call<WishlistCheckResponse> call, @NonNull Throwable t) {
+                        // Handle error silently
+                    }
+                });
+
+        holder.wishlistButton.setOnClickListener(v -> toggleWishlist(holder.wishlistButton, product));
+    }
+
+    private void updateWishlistButtonState(FloatingActionButton button, boolean isInWishlist) {
+        if (isInWishlist) {
+            button.setImageResource(R.drawable.ic_favorite);
+            button.setColorFilter(ContextCompat.getColor(context, R.color.error));
+        } else {
+            button.setImageResource(R.drawable.ic_favorite_border);
+            button.setColorFilter(ContextCompat.getColor(context, R.color.wishlist_icon_inactive));
+        }
+    }
+
+    private void toggleWishlist(FloatingActionButton button, Product product) {
+        if (!sessionManager.isLoggedIn()) {
+            return;
+        }
+
+        String userId = sessionManager.getUserId();
+        Map<String, Object> request = new HashMap<>();
+        request.put("user_id", userId);
+        request.put("product_id", product.getId());
+
+        apiService.checkWishlist(userId, product.getId())
+                .enqueue(new Callback<WishlistCheckResponse>() {
+                    @Override
+                    public void onResponse(@NonNull Call<WishlistCheckResponse> call,
+                                           @NonNull Response<WishlistCheckResponse> response) {
+                        if (response.isSuccessful() && response.body() != null) {
+                            boolean isInWishlist = response.body().isExists();
+
+                            if (isInWishlist) {
+                                removeFromWishlist(button, userId, product.getId());
+                            } else {
+                                addToWishlist(button, userId, product.getId());
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(@NonNull Call<WishlistCheckResponse> call, @NonNull Throwable t) {
+                        Toasty.error(context, "Network error").show();
+                    }
+                });
+    }
+
+    private void addToWishlist(FloatingActionButton button, String userId, int productId) {
+        Map<String, Integer> request = new HashMap<>();
+        request.put("product_id", productId);
+
+        apiService.addToWishlist(userId, request)
+                .enqueue(new Callback<WishlistResponse>() {
+                    @Override
+                    public void onResponse(@NonNull Call<WishlistResponse> call,
+                                           @NonNull Response<WishlistResponse> response) {
+                        if (response.isSuccessful()) {
+                            updateWishlistButtonState(button, true);
+                            Toasty.success(context, "Added to wishlist").show();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(@NonNull Call<WishlistResponse> call, @NonNull Throwable t) {
+                        Toasty.error(context, "Failed to add to wishlist").show();
+                    }
+                });
+    }
+
+    private void removeFromWishlist(FloatingActionButton button, String userId, int productId) {
+        apiService.removeFromWishlist(userId, productId)
+                .enqueue(new Callback<WishlistResponse>() {
+                    @Override
+                    public void onResponse(@NonNull Call<WishlistResponse> call,
+                                           @NonNull Response<WishlistResponse> response) {
+                        if (response.isSuccessful()) {
+                            updateWishlistButtonState(button, false);
+                            Toasty.success(context, "Removed from wishlist").show();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(@NonNull Call<WishlistResponse> call, @NonNull Throwable t) {
+                        Toasty.error(context, "Failed to remove from wishlist").show();
+                    }
+                });
     }
 
     private String formatPrice(int price) {
         NumberFormat rupiahFormat = NumberFormat.getCurrencyInstance(new Locale("id", "ID"));
         String formatted = rupiahFormat.format(price);
-        return formatted.substring(0, formatted.length() - 3); // Hapus ",00" di akhir
+        return formatted.substring(0, formatted.length() - 3);
     }
 
     @Override
@@ -137,6 +253,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
         TextView titleText, categoryText, viewCountText, priceText;
         TextView originalPriceText, discountText, soldOutLabel;
         TextView purchaseCountText;
+        FloatingActionButton wishlistButton;
 
         ViewHolder(View itemView) {
             super(itemView);
@@ -149,6 +266,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
             originalPriceText = itemView.findViewById(R.id.originalPriceText);
             discountText = itemView.findViewById(R.id.discountText);
             soldOutLabel = itemView.findViewById(R.id.soldOutLabel);
+            wishlistButton = itemView.findViewById(R.id.wishlistButton);
         }
     }
 }

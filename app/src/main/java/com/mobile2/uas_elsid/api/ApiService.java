@@ -12,6 +12,8 @@ import com.mobile2.uas_elsid.api.response.ProvinceResponse;
 import com.mobile2.uas_elsid.api.response.ReviewResponse;
 import com.mobile2.uas_elsid.api.response.ShippingCostResponse;
 import com.mobile2.uas_elsid.api.response.UserResponse;
+import com.mobile2.uas_elsid.api.response.WishlistCheckResponse;
+import com.mobile2.uas_elsid.api.response.WishlistResponse;
 import com.mobile2.uas_elsid.api.response.request.LoginRequest;
 import com.mobile2.uas_elsid.api.response.request.RegisterRequest;
 import com.mobile2.uas_elsid.api.response.request.ReviewRequest;
@@ -131,5 +133,17 @@ public interface ApiService {
 
     @POST("api/reviews")
     Call<ReviewResponse> addReview(@Body Map<String, Object> reviewData);
+
+    @GET("api/users/{userId}/wishlist")
+    Call<WishlistResponse> getWishlist(@Path("userId") String userId);
+
+    @POST("api/users/{userId}/wishlist")
+    Call<WishlistResponse> addToWishlist(@Path("userId") String userId, @Body Map<String, Integer> request);
+
+    @DELETE("api/users/{userId}/wishlist/{productId}")
+    Call<WishlistResponse> removeFromWishlist(@Path("userId") String userId, @Path("productId") int productId);
+
+    @GET("api/users/{userId}/wishlist/check/{productId}")
+    Call<WishlistCheckResponse> checkWishlist(@Path("userId") String userId, @Path("productId") int productId);
 
 }

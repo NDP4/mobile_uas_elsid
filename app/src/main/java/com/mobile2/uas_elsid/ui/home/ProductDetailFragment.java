@@ -5,6 +5,7 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -14,7 +15,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.Toast;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.tabs.TabLayoutMediator;
 import com.mobile2.uas_elsid.LoginActivity;
 import com.mobile2.uas_elsid.R;
@@ -23,6 +26,8 @@ import com.mobile2.uas_elsid.api.ApiClient;
 import com.mobile2.uas_elsid.api.response.ProductDetailResponse;
 import com.mobile2.uas_elsid.api.response.ProductResponse;
 import com.mobile2.uas_elsid.api.response.ReviewResponse;
+import com.mobile2.uas_elsid.api.response.WishlistCheckResponse;
+import com.mobile2.uas_elsid.api.response.WishlistResponse;
 import com.mobile2.uas_elsid.databinding.FragmentProductDetailBinding;
 import com.mobile2.uas_elsid.model.CartItem;
 import com.mobile2.uas_elsid.model.Product;
@@ -54,6 +59,9 @@ public class ProductDetailFragment extends Fragment {
     private ReviewAdapter reviewAdapter;
     private ProductVariant selectedVariant;
     private SessionManager sessionManager;
+    private FloatingActionButton wishlistButton;
+    private boolean isInWishlist = false;
+    private int productId;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
@@ -66,6 +74,13 @@ public class ProductDetailFragment extends Fragment {
             int productId = getArguments().getInt("product_id");
             loadProductDetails(productId);
         }
+        // Check wishlist status if user is logged in
+        if (sessionManager.isLoggedIn()) {
+            checkWishlistStatus();
+        }
+
+        wishlistButton = binding.wishlistButton;
+        setupWishlistButton();
 
         reviewAdapter = new ReviewAdapter(requireContext());
         binding.reviewsRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
@@ -85,6 +100,144 @@ public class ProductDetailFragment extends Fragment {
         TabLayoutMediator tabLayoutMediator = new TabLayoutMediator(
                 binding.imageIndicator, binding.imageSlider, (tab, position) -> {});
         tabLayoutMediator.attach();
+    }
+    private void setupWishlistButton() {
+        if (!sessionManager.isLoggedIn()) {
+            wishlistButton.setVisibility(View.GONE);
+            return;
+        }
+
+        wishlistButton.setVisibility(View.VISIBLE);
+
+        if (currentProduct != null) {
+            // Check if product is in wishlist
+            ApiClient.getClient().checkWishlist(sessionManager.getUserId(), currentProduct.getId())
+                    .enqueue(new Callback<WishlistCheckResponse>() {
+                        @Override
+                        public void onResponse(@NonNull Call<WishlistCheckResponse> call,
+                                               @NonNull Response<WishlistCheckResponse> response) {
+                            if (response.isSuccessful() && response.body() != null) {
+                                isInWishlist = response.body().isExists();
+                                updateWishlistButtonState();
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(@NonNull Call<WishlistCheckResponse> call, @NonNull Throwable t) {
+                            Toasty.error(requireContext(), "Failed to check wishlist status").show();
+                        }
+                    });
+        }
+
+        wishlistButton.setOnClickListener(v -> toggleWishlist());
+    }
+    private void updateWishlistButtonState() {
+        if (isInWishlist) {
+            wishlistButton.setImageResource(R.drawable.ic_favorite);
+            wishlistButton.setColorFilter(ContextCompat.getColor(requireContext(), R.color.error));
+        } else {
+            wishlistButton.setImageResource(R.drawable.ic_favorite_border);
+            wishlistButton.setColorFilter(ContextCompat.getColor(requireContext(), R.color.wishlist_icon_inactive));
+        }
+    }
+    private void toggleWishlist() {
+        if (!sessionManager.isLoggedIn()) {
+            showLoginDialog();
+            return;
+        }
+
+        if (currentProduct == null) return;
+
+        if (isInWishlist) {
+            removeFromWishlist();
+        } else {
+            addToWishlist();
+        }
+    }
+    private void showLoginDialog() {
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Login Required")
+                .setMessage("Please login to add items to your wishlist")
+                .setPositiveButton("Login", (dialog, which) -> {
+                    startActivity(new Intent(requireActivity(), LoginActivity.class));
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void checkWishlistStatus() {
+        System.out.println("Debug - Checking wishlist for userId: " + sessionManager.getUserId() + ", productId: " + productId);
+
+        ApiClient.getClient().checkWishlist(sessionManager.getUserId(), productId)
+                .enqueue(new Callback<WishlistCheckResponse>() {
+                    @Override
+                    public void onResponse(Call<WishlistCheckResponse> call, Response<WishlistCheckResponse> response) {
+                        System.out.println("Debug - Wishlist check response: " + response.code());
+                        if (response.isSuccessful() && response.body() != null) {
+                            isInWishlist = response.body().isExists();
+                            updateWishlistButton();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<WishlistCheckResponse> call, Throwable t) {
+                        // Handle error
+                    }
+                });
+    }
+
+    private void updateWishlistButton() {
+        int iconResource = isInWishlist ?
+                R.drawable.ic_favorite :
+                R.drawable.ic_favorite_border;
+        wishlistButton.setImageResource(iconResource);
+    }
+
+    private void addToWishlist() {
+        Map<String, Integer> request = new HashMap<>();
+        request.put("product_id", currentProduct.getId());
+
+        ApiClient.getClient().addToWishlist(sessionManager.getUserId(), request)
+                .enqueue(new Callback<WishlistResponse>() {
+                    @Override
+                    public void onResponse(@NonNull Call<WishlistResponse> call,
+                                           @NonNull Response<WishlistResponse> response) {
+                        if (response.isSuccessful()) {
+                            isInWishlist = true;
+                            updateWishlistButtonState();
+                            Toasty.success(requireContext(), "Added to wishlist").show();
+                        } else {
+                            Toasty.error(requireContext(), "Failed to add to wishlist").show();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(@NonNull Call<WishlistResponse> call, @NonNull Throwable t) {
+                        Toasty.error(requireContext(), "Network error").show();
+                    }
+                });
+    }
+
+    private void removeFromWishlist() {
+        ApiClient.getClient().removeFromWishlist(sessionManager.getUserId(), currentProduct.getId())
+                .enqueue(new Callback<WishlistResponse>() {
+                    @Override
+                    public void onResponse(@NonNull Call<WishlistResponse> call,
+                                           @NonNull Response<WishlistResponse> response) {
+                        if (response.isSuccessful()) {
+                            isInWishlist = false;
+                            updateWishlistButtonState();
+                            Toasty.success(requireContext(), "Removed from wishlist").show();
+                        } else {
+                            Toasty.error(requireContext(), "Failed to remove from wishlist").show();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(@NonNull Call<WishlistResponse> call, @NonNull Throwable t) {
+                        Toasty.error(requireContext(), "Network error").show();
+                    }
+                });
     }
 
     private void loadProductDetails(int productId) {
@@ -106,6 +259,7 @@ public class ProductDetailFragment extends Fragment {
                         setupProductDetails(product);
                         updateViewCount(productId);
                         loadReviews(productId);
+                        setupWishlistButton();
                     } else {
                         showError("Product not found");
                     }

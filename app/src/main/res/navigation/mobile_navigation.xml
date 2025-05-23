@@ -70,7 +70,15 @@
         android:id="@+id/navigation_wishlist"
         android:name="com.mobile2.uas_elsid.ui.profile.WishlistFragment"
         android:label="Wishlist"
-        tools:layout="@layout/fragment_wishlist" />
+        tools:layout="@layout/fragment_wishlist">
+        <action
+            android:id="@+id/action_navigation_wishlist_to_navigation_product_detail"
+            app:destination="@id/navigation_product_detail"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+    </fragment>
     <fragment
         android:id="@+id/navigation_about"
         android:name="com.mobile2.uas_elsid.ui.profile.AboutFragment"
