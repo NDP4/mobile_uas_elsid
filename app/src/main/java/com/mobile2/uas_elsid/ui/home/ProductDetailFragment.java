@@ -15,6 +15,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -528,19 +529,29 @@ public class ProductDetailFragment extends Fragment {
 //                return;
 //            }
             if (!sessionManager.isLoggedIn()) {
-                // Show login prompt dialog instead of toast
-                new AlertDialog.Builder(requireContext())
-                        .setTitle("Login Required")
-                        .setMessage("Please login to add items to cart. Would you like to login now?")
-                        .setPositiveButton("Login", (dialog, which) -> {
-                            // Navigate to login
-                            startActivity(new Intent(requireActivity(), LoginActivity.class));
-                        })
-                        .setNegativeButton("Continue as Guest", (dialog, which) -> {
-                            // Allow viewing but not adding to cart
-                            dialog.dismiss();
-                        })
-                        .show();
+                View dialogView = getLayoutInflater().inflate(R.layout.layout_login_required_dialog, null);
+                TextView messageText = dialogView.findViewById(R.id.loginMessageText);
+                messageText.setText("Please login to add items to cart");
+
+                AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                        .setView(dialogView)
+                        .setCancelable(false)
+                        .create();
+
+                // Set transparent background for rounded corners
+                dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+
+                // Setup button clicks
+                dialogView.findViewById(R.id.loginButton).setOnClickListener(view -> {
+                    dialog.dismiss();
+                    startActivity(new Intent(requireActivity(), LoginActivity.class));
+                });
+
+                dialogView.findViewById(R.id.cancelButton).setOnClickListener(button -> {
+                    dialog.dismiss();
+                });
+
+                dialog.show();
                 return;
             }
 

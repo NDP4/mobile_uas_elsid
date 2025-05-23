@@ -14,4 +14,22 @@
         <item name="android:layout_margin">4dp</item>
         <item name="chipIconSize">24dp</item>
     </style>
+    <style name="App.Custom.Indicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
+        <item name="android:color">@android:color/transparent</item>
+        <item name="android:width">48dp</item>
+        <item name="android:height">32dp</item>
+<!--        <item name="backgroundType">rectangle</item>-->
+    </style>
+    <style name="BottomNavigationTextAppearance" parent="TextAppearance.MaterialComponents.Caption">
+        <item name="android:textSize">11sp</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="android:lineSpacingMultiplier">0.5</item>
+    </style>
+
+    <style name="BottomNavigation">
+        <item name="android:background">@drawable/bottom_nav_background</item>
+        <item name="itemIconTint">@color/bottom_nav_color</item>
+        <item name="itemTextColor">@color/bottom_nav_color</item>
+        <item name="itemRippleColor">@color/primary_light</item>
+    </style>
 </resources>

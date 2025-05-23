@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import com.mobile2.uas_elsid.LoginActivity;
 import com.mobile2.uas_elsid.R;
@@ -57,20 +58,30 @@ public class CheckoutFragment extends Fragment implements CartAdapter.CartItemLi
 
     private void checkLoginStatus() {
         if (!sessionManager.isLoggedIn()) {
-            new AlertDialog.Builder(requireContext())
-                    .setTitle("Login Required")
-                    .setMessage("Please login to view your profile")
-                    .setPositiveButton("Login", (dialog, which) -> {
-                        // Navigate to login activity
-                        startActivity(new Intent(requireActivity(), LoginActivity.class));
-                        requireActivity().finish();
-                    })
-                    .setNegativeButton("Cancel", (dialog, which) -> {
-                        // Go back to previous screen
-                        requireActivity().onBackPressed();
-                    })
+            View dialogView = getLayoutInflater().inflate(R.layout.layout_login_required_dialog, null);
+            TextView messageText = dialogView.findViewById(R.id.loginMessageText);
+            messageText.setText("Please login to view your checkout");
+            AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                    .setView(dialogView)
                     .setCancelable(false)
-                    .show();
+                    .create();
+
+            // Set transparent background for rounded corners
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+
+            // Setup button clicks
+            dialogView.findViewById(R.id.loginButton).setOnClickListener(v -> {
+                dialog.dismiss();
+                startActivity(new Intent(requireActivity(), LoginActivity.class));
+                requireActivity().finish();
+            });
+
+            dialogView.findViewById(R.id.cancelButton).setOnClickListener(v -> {
+                dialog.dismiss();
+                requireActivity().onBackPressed();
+            });
+
+            dialog.show();
         }
     }
 

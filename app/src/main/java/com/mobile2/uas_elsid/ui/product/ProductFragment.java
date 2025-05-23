@@ -5,12 +5,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RadioGroup;
+import android.widget.SearchView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.android.material.bottomsheet.BottomSheetDialog;
@@ -18,12 +20,14 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.slider.RangeSlider;
 import com.mobile2.uas_elsid.R;
 import com.mobile2.uas_elsid.adapter.ProductAdapter;
+import com.mobile2.uas_elsid.adapter.SearchSuggestionsAdapter;
 import com.mobile2.uas_elsid.api.ApiClient;
 import com.mobile2.uas_elsid.api.ApiService;
 import com.mobile2.uas_elsid.api.response.ProductResponse;
 import com.mobile2.uas_elsid.databinding.FragmentProductBinding;
 import com.mobile2.uas_elsid.model.Product;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,6 +39,8 @@ import retrofit2.Response;
 public class ProductFragment extends Fragment {
 
     private FragmentProductBinding binding;
+    private SearchSuggestionsAdapter searchAdapter;
+    private List<Product> allProducts = new ArrayList<>();
     private ProductAdapter productAdapter;
     private ApiService apiService;
     private boolean isLoading = false;
@@ -60,6 +66,8 @@ public class ProductFragment extends Fragment {
 
         setupRecyclerView();
         setupSwipeRefresh();
+        setupSearch();
+        setupSearchViewInteraction();
 //        selectedCategory = null;
         setupFilterButton();
         loadProducts();
@@ -71,6 +79,97 @@ public class ProductFragment extends Fragment {
 
         return binding.getRoot();
     }
+
+    private void setupSearch() {
+        // Initialize search adapter
+        searchAdapter = new SearchSuggestionsAdapter(requireContext());
+        binding.searchSuggestionsList.setLayoutManager(new LinearLayoutManager(requireContext()));
+        binding.searchSuggestionsList.setAdapter(searchAdapter);
+
+        // Load products for search
+        loadProductsForSearch();
+
+        // Setup click listener
+        searchAdapter.setOnSuggestionClickListener(product -> {
+            // Navigate to product detail
+            Bundle bundle = new Bundle();
+            bundle.putInt("product_id", product.getId());
+            Navigation.findNavController(requireView())
+                    .navigate(R.id.navigation_product_detail, bundle);
+
+            // Clear search and hide suggestions
+            binding.searchView.setQuery("", false);
+            binding.searchView.clearFocus();
+            binding.searchSuggestionsList.setVisibility(View.GONE);
+        });
+
+        // Setup search view listener
+        binding.searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                searchQuery = query;
+                loadProducts();
+
+                // Clear search and hide suggestions
+                binding.searchView.setQuery("", false);
+                binding.searchView.clearFocus();
+                binding.searchSuggestionsList.setVisibility(View.GONE);
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                if (newText.length() > 0) {
+                    binding.searchSuggestionsList.setVisibility(View.VISIBLE);
+                    filterProducts(newText);
+                } else {
+                    binding.searchSuggestionsList.setVisibility(View.GONE);
+                }
+                return true;
+            }
+        });
+    }
+    private void loadProductsForSearch() {
+        ApiClient.getClient().getProducts().enqueue(new Callback<ProductResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<ProductResponse> call, @NonNull Response<ProductResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    allProducts = response.body().getProducts();
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ProductResponse> call, @NonNull Throwable t) {
+                Toasty.error(requireContext(), "Failed to load products for search").show();
+            }
+        });
+    }
+    private void filterProducts(String query) {
+        if (allProducts == null) return;
+
+        List<Product> filteredList = new ArrayList<>();
+        String lowercaseQuery = query.toLowerCase();
+
+        for (Product product : allProducts) {
+            if (product.getTitle().toLowerCase().contains(lowercaseQuery)) {
+                filteredList.add(product);
+            }
+        }
+
+        searchAdapter.updateSuggestions(filteredList);
+    }
+    private void setupSearchViewInteraction() {
+        binding.searchView.setOnSearchClickListener(v -> {
+            binding.searchSuggestionsList.setVisibility(View.VISIBLE);
+        });
+
+        binding.searchView.setOnCloseListener(() -> {
+            binding.searchSuggestionsList.setVisibility(View.GONE);
+            return false;
+        });
+    }
+
+
 
     private void setupFilterButton() {
         binding.filterFab.setOnClickListener(v -> showFilterBottomSheet());
@@ -200,9 +299,24 @@ public class ProductFragment extends Fragment {
 
     private void setupSwipeRefresh() {
         binding.swipeRefresh.setOnRefreshListener(() -> {
-            selectedCategory = null; // Reset category filter when refreshing
+            // Clear search query and view
+            searchQuery = null;
+            binding.searchView.setQuery("", false);
+            binding.searchView.clearFocus();
+            binding.searchSuggestionsList.setVisibility(View.GONE);
+
+            // Reset loading state
+            isLoading = false;
+
+            // Reload products
             loadProducts();
         });
+
+        // Configure loading indicator colors
+        binding.swipeRefresh.setColorSchemeResources(
+                R.color.primary,
+                R.color.primary_dark
+        );
     }
 
     private void loadProducts() {
@@ -260,6 +374,15 @@ public class ProductFragment extends Fragment {
                 Toasty.error(requireContext(), "Network error: " + t.getMessage()).show();
             }
         });
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (binding != null) {
+            binding.searchView.setQuery("", false);
+            binding.searchSuggestionsList.setVisibility(View.GONE);
+        }
     }
 
     @Override
