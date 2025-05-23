@@ -114,6 +114,9 @@ public class ProfileFragment extends Fragment {
         binding.aboutButton.setOnClickListener(v ->
                 Navigation.findNavController(v).navigate(R.id.navigation_about)
         );
+        binding.orderHistoryButton.setOnClickListener(v ->
+                Navigation.findNavController(v).navigate(R.id.navigation_order_history)
+        );
 
         binding.logoutButton.setOnClickListener(v -> {
             sessionManager.logout();

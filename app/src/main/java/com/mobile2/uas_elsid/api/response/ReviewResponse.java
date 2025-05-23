@@ -6,7 +6,7 @@ import java.util.List;
 
 public class ReviewResponse {
     @SerializedName("status")
-    private boolean status;
+    private int status;
 
     @SerializedName("message")
     private String message;
@@ -14,7 +14,7 @@ public class ReviewResponse {
     @SerializedName("reviews")
     private List<ProductReview> reviews;
 
-    public boolean isStatus() { return status; }
+    public int isStatus() { return status; }
     public String getMessage() { return message; }
     public List<ProductReview> getReviews() { return reviews; }
 }

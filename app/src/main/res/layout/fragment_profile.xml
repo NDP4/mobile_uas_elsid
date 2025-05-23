@@ -136,6 +136,18 @@
                 android:padding="8dp">
 
 
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/orderHistoryButton"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp"
+                    android:text="Order History"
+                    android:textSize="12sp"
+                    android:textAlignment="textStart"
+                    android:textColor="@color/text_primary"
+                    app:icon="@drawable/ic_history"
+                    app:iconTint="@color/primary" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/wishlistButton"

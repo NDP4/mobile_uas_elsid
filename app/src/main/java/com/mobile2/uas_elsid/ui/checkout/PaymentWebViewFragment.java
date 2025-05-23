@@ -10,6 +10,9 @@ import android.webkit.WebViewClient;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
+
+import com.mobile2.uas_elsid.R;
 
 public class PaymentWebViewFragment extends Fragment {
     private WebView webView;
@@ -35,14 +38,19 @@ public class PaymentWebViewFragment extends Fragment {
             paymentUrl = getArguments().getString("payment_url");
         }
 
-        // Enable JavaScript
         WebSettings webSettings = webView.getSettings();
         webSettings.setJavaScriptEnabled(true);
 
-        // Handle redirects within WebView
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                // Check if the URL contains success indicators
+                if (url.contains("payment_status=success") || url.contains("transaction_status=settlement")) {
+                    // Navigate to Home Fragment
+                    Navigation.findNavController(requireView())
+                            .navigate(R.id.action_navigation_payment_webview_to_navigation_home);
+                    return true;
+                }
                 view.loadUrl(url);
                 return true;
             }
@@ -54,8 +62,6 @@ public class PaymentWebViewFragment extends Fragment {
 
         return webView;
     }
-
-
 
     public boolean canGoBack() {
         return webView != null && webView.canGoBack();

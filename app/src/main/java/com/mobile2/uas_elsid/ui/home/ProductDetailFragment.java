@@ -6,6 +6,7 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import android.view.LayoutInflater;
@@ -28,6 +29,7 @@ import com.mobile2.uas_elsid.model.Product;
 import com.mobile2.uas_elsid.model.ProductReview;
 import com.mobile2.uas_elsid.model.ProductVariant;
 
+import java.io.IOException;
 import java.text.NumberFormat;
 import java.util.HashMap;
 import java.util.List;
@@ -70,7 +72,7 @@ public class ProductDetailFragment extends Fragment {
         binding.reviewsRecyclerView.setAdapter(reviewAdapter);
 
         setupImageSlider();
-
+        setupReviews();
         setupAddToCart();
         return binding.getRoot();
     }
@@ -103,6 +105,7 @@ public class ProductDetailFragment extends Fragment {
                         updateUI(product);
                         setupProductDetails(product);
                         updateViewCount(productId);
+                        loadReviews(productId);
                     } else {
                         showError("Product not found");
                     }
@@ -417,27 +420,67 @@ public class ProductDetailFragment extends Fragment {
     }
 
     private void loadReviews(int productId) {
+        System.out.println("Starting to load reviews for product: " + productId);
+        binding.reviewsSection.setVisibility(View.VISIBLE);
+
         ApiClient.getClient().getProductReviews(productId).enqueue(new Callback<ReviewResponse>() {
             @Override
             public void onResponse(@NonNull Call<ReviewResponse> call, @NonNull Response<ReviewResponse> response) {
+                System.out.println("Review response code: " + response.code());
+
                 if (response.isSuccessful() && response.body() != null) {
                     List<ProductReview> reviews = response.body().getReviews();
+                    System.out.println("Number of reviews: " + (reviews != null ? reviews.size() : "null"));
+
                     if (reviews != null && !reviews.isEmpty()) {
                         reviewAdapter.setReviews(reviews);
                         calculateAverageRating(reviews);
                         binding.reviewsSection.setVisibility(View.VISIBLE);
+                        System.out.println("Reviews populated and section made visible");
                     } else {
-                        binding.reviewsSection.setVisibility(View.GONE);
+                        binding.reviewsSection.setVisibility(View.VISIBLE);
+                        System.out.println("No reviews available");
                     }
+                } else {
+                    // Safe error body handling
+                    String errorMessage = "Unknown error";
+                    if (response.errorBody() != null) {
+                        try {
+                            errorMessage = response.errorBody().string();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            errorMessage = "Error reading error response";
+                        }
+                    }
+                    System.out.println("Review response unsuccessful: " + errorMessage);
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<ReviewResponse> call, @NonNull Throwable t) {
-                Toasty.error(requireContext(), "Failed to load reviews: " + t.getMessage(),
-                        Toasty.LENGTH_SHORT).show();
+                System.out.println("Review loading failed: " + t.getMessage());
+                t.printStackTrace();
             }
         });
+    }
+    private void setupReviews() {
+        // Debug log
+        System.out.println("Setting up reviews section");
+
+        reviewAdapter = new ReviewAdapter(requireContext());
+        binding.reviewsRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        binding.reviewsRecyclerView.setAdapter(reviewAdapter);
+
+        // Disable nested scrolling if inside NestedScrollView
+        binding.reviewsRecyclerView.setNestedScrollingEnabled(false);
+
+        // Add dividers between items
+        binding.reviewsRecyclerView.addItemDecoration(
+                new DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL)
+        );
+
+        // Debug log
+        System.out.println("Reviews section setup complete");
     }
 
     private void calculateAverageRating(List<ProductReview> reviews) {

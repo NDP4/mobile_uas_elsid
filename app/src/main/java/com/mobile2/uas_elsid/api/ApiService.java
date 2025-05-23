@@ -118,5 +118,18 @@ public interface ApiService {
     Call<PaymentResponse> checkPaymentStatus(@Path("orderId") int orderId);
     @DELETE("api/cart/clear/{userId}")
     Call<CartResponse> deleteCartItems(@Path("userId") String userId);
+    @GET("api/users/{userId}/purchase-history")
+    Call<OrderResponse> getPurchaseHistory(@Path("userId") String userId);
+
+    @POST("api/orders/reorder")
+    Call<OrderResponse> reorderItems(@Body Map<String, Object> reorderData);
+    @GET("api/users/{userId}/orders")
+    Call<OrderResponse> getUserOrders(@Path("userId") String userId);
+
+//    @GET("api/products/{productId}/reviews")
+//    Call<ReviewResponse> getProductReviews(@Path("productId") int productId);
+
+    @POST("api/reviews")
+    Call<ReviewResponse> addReview(@Body Map<String, Object> reviewData);
 
 }

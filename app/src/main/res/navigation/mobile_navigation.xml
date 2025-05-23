@@ -109,6 +109,32 @@
             app:popUpToInclusive="true" />
     </fragment>
 
+    <fragment
+        android:id="@+id/navigation_order_history"
+        android:name="com.mobile2.uas_elsid.ui.profile.OrderHistoryFragment"
+        android:label="Order History"
+        tools:layout="@layout/fragment_order_history">
+        <action
+            android:id="@+id/action_navigation_order_history_to_navigation_checkout"
+            app:destination="@id/navigation_checkout" />
+        <action
+            android:id="@+id/action_navigation_order_history_to_navigation_write_review"
+            app:destination="@id/navigation_write_review" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/navigation_write_review"
+        android:name="com.mobile2.uas_elsid.ui.checkout.WriteReviewFragment"
+        android:label="Write Review"
+        tools:layout="@layout/fragment_write_review">
+        <argument
+            android:name="orderId"
+            app:argType="integer" />
+        <argument
+            android:name="productId"
+            app:argType="integer" />
+    </fragment>
+
     <action
         android:id="@+id/action_navigation_detail_pesanan_to_navigation_payment_webview"
         app:destination="@id/navigation_payment_webview" />
