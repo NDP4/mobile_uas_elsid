@@ -24,6 +24,14 @@ public class OrderHistoryAdapter extends RecyclerView.Adapter<OrderHistoryAdapte
     private List<Order> orders = new ArrayList<>();
     private Context context;
     private OnOrderActionListener listener;
+    private OnItemClickListener itemClickListener;
+    public interface OnItemClickListener {
+        void onItemClick(Order order);
+    }
+
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        this.itemClickListener = listener;
+    }
 
     public interface OnOrderActionListener {
         void onReorder(Order order);
@@ -81,6 +89,11 @@ public class OrderHistoryAdapter extends RecyclerView.Adapter<OrderHistoryAdapte
 
         holder.writeReviewButton.setOnClickListener(v -> {
             if (listener != null) listener.onWriteReview(order);
+        });
+        holder.itemView.setOnClickListener(v -> {
+            if (itemClickListener != null) {
+                itemClickListener.onItemClick(order);
+            }
         });
     }
 

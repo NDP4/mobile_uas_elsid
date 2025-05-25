@@ -559,7 +559,7 @@ public class DetailPesananFragment extends Fragment {
             public void onResponse(@NonNull Call<OrderResponse> call, @NonNull Response<OrderResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     Map<String, Integer> paymentRequest = new HashMap<>();
-                    paymentRequest.put("order_id", response.body().getOrder().getId());
+                    paymentRequest.put("order_id", response.body().getData().getOrder().getId());
                     paymentRequest.put("total_amount", totalAmount);
 
                     ApiClient.getClient().createPayment(paymentRequest).enqueue(new Callback<PaymentResponse>() {

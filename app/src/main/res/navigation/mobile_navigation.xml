@@ -146,4 +146,21 @@
     <action
         android:id="@+id/action_navigation_detail_pesanan_to_navigation_payment_webview"
         app:destination="@id/navigation_payment_webview" />
+
+    <fragment
+        android:id="@+id/navigation_order_detail"
+        android:name="com.mobile2.uas_elsid.ui.profile.OrderDetailFragment"
+        android:label="Order Detail"
+        tools:layout="@layout/fragment_order_detail">
+        <argument
+            android:name="order_id"
+            app:argType="integer" />
+        <action
+            android:id="@+id/action_navigation_order_detail_to_navigation_detail_pesanan"
+            app:destination="@id/navigation_detail_pesanan" />
+    </fragment>
+
+    <action
+        android:id="@+id/action_navigation_order_history_to_navigation_order_detail"
+        app:destination="@id/navigation_order_detail" />
 </navigation>

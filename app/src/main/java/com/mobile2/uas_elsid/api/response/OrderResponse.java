@@ -12,12 +12,11 @@ public class OrderResponse {
     @SerializedName("message")
     private String message;
 
+    @SerializedName("data")
+    private OrderData data;
+
     @SerializedName("orders")
     private List<Order> orders;
-
-
-    @SerializedName("order")
-    private Order order;
 
     public int getStatus() {
         return status;
@@ -26,9 +25,28 @@ public class OrderResponse {
     public String getMessage() {
         return message;
     }
-    public List<Order> getOrders() { return orders; }
 
-    public Order getOrder() {
-        return order;
+    public OrderData getData() {
+        return data;
+    }
+
+    public List<Order> getOrders() {
+        return orders;
+    }
+
+    public static class OrderData {
+        @SerializedName("order")
+        private Order order;
+
+        @SerializedName("can_reorder")
+        private boolean canReorder;
+
+        public Order getOrder() {
+            return order;
+        }
+
+        public boolean isCanReorder() {
+            return canReorder;
+        }
     }
 }

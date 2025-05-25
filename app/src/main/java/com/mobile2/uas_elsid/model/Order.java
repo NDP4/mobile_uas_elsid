@@ -48,6 +48,13 @@ public class Order {
 
     @SerializedName("user")
     private User user;
+    @SerializedName("created_at")
+    private String createdAt;
+    @SerializedName("discount_amount")
+    private int discountAmount;
+    @SerializedName("subtotal")
+    private int subtotal;
+
 
     // Getters
     public int getId() { return id; }
@@ -65,4 +72,17 @@ public class Order {
     public String getPaymentUrl() { return paymentUrl; }
     public List<OrderItem> getItems() { return items; }
     public User getUser() { return user; }
+    public String getCreatedAt() { return createdAt; }
+    public int getDiscountAmount() { return discountAmount; }
+//    public int getSubtotal() { return subtotal; }
+    public int getSubtotal() {
+        if (items != null && !items.isEmpty()) {
+            int calculatedSubtotal = 0;
+            for (OrderItem item : items) {
+                calculatedSubtotal += item.getSubtotal();
+            }
+            return calculatedSubtotal;
+        }
+        return 0;
+    }
 }

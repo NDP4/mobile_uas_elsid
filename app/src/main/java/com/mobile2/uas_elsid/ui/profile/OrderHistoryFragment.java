@@ -55,6 +55,13 @@ public class OrderHistoryFragment extends Fragment implements OrderHistoryAdapte
 
     private void setupRecyclerView() {
         adapter = new OrderHistoryAdapter(requireContext(), this);
+        adapter.setOnItemClickListener(order -> {
+            // Navigasi ke OrderDetailFragment dengan mengirim order ID
+            Bundle bundle = new Bundle();
+            bundle.putInt("order_id", order.getId());
+            Navigation.findNavController(requireView())
+                    .navigate(R.id.action_navigation_order_history_to_navigation_order_detail, bundle);
+        });
         binding.recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.recyclerView.setAdapter(adapter);
     }

@@ -123,6 +123,8 @@ public interface ApiService {
     @GET("api/users/{userId}/purchase-history")
     Call<OrderResponse> getPurchaseHistory(@Path("userId") String userId);
 
+    @GET("api/orders/{id}")
+    Call<OrderResponse> getOrder(@Path("id") int orderId);
     @POST("api/orders/reorder")
     Call<OrderResponse> reorderItems(@Body Map<String, Object> reorderData);
     @GET("api/users/{userId}/orders")
