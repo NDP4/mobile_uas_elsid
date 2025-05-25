@@ -25,6 +25,8 @@ public class OrderDetailAdapter extends RecyclerView.Adapter<OrderDetailAdapter.
     private final Context context;
     private List<OrderItem> items;
     private final NumberFormat rupiahFormat;
+    private int discountAmount = 0;
+    private String couponCode = null;
 
     public OrderDetailAdapter(Context context) {
         this.context = context;
@@ -34,6 +36,12 @@ public class OrderDetailAdapter extends RecyclerView.Adapter<OrderDetailAdapter.
 
     public void setItems(List<OrderItem> items) {
         this.items = items;
+        notifyDataSetChanged();
+    }
+
+    public void setDiscountInfo(int discountAmount, String couponCode) {
+        this.discountAmount = discountAmount;
+        this.couponCode = couponCode;
         notifyDataSetChanged();
     }
 
@@ -70,25 +78,25 @@ public class OrderDetailAdapter extends RecyclerView.Adapter<OrderDetailAdapter.
             holder.variantText.setVisibility(View.GONE);
         }
 
-        // Set quantity
+        // Set quantity and price
         holder.quantityText.setText(String.format("Qty: %d", item.getQuantity()));
 
         // Calculate and set price
-        int price;
-        if (item.getVariant() != null) {
-            price = calculatePrice(
-                    item.getVariant().getPrice(),
-                    item.getVariant().getDiscount(),
-                    item.getQuantity()
-            );
-        } else {
-            price = calculatePrice(
-                    item.getProduct().getPrice(),
-                    item.getProduct().getDiscount(),
-                    item.getQuantity()
-            );
-        }
+        int price = calculatePrice(
+            item.getVariant() != null ? item.getVariant().getPrice() : item.getProduct().getPrice(),
+            item.getVariant() != null ? item.getVariant().getDiscount() : item.getProduct().getDiscount(),
+            item.getQuantity()
+        );
         holder.priceText.setText(formatPrice(price));
+
+        // Show discount if applicable
+        if (discountAmount > 0 && couponCode != null && holder.discountText != null) {
+            holder.discountText.setVisibility(View.VISIBLE);
+            holder.discountText.setText(String.format("-%s (Kupon: %s)",
+                formatPrice(discountAmount), couponCode));
+        } else if (holder.discountText != null) {
+            holder.discountText.setVisibility(View.GONE);
+        }
     }
 
     @Override
@@ -108,7 +116,7 @@ public class OrderDetailAdapter extends RecyclerView.Adapter<OrderDetailAdapter.
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         ImageView productImage;
-        TextView titleText, variantText, quantityText, priceText;
+        TextView titleText, variantText, quantityText, priceText, discountText;
 
         ViewHolder(View itemView) {
             super(itemView);
@@ -117,6 +125,8 @@ public class OrderDetailAdapter extends RecyclerView.Adapter<OrderDetailAdapter.
             variantText = itemView.findViewById(R.id.variantText);
             quantityText = itemView.findViewById(R.id.quantityText);
             priceText = itemView.findViewById(R.id.priceText);
+            discountText = itemView.findViewById(R.id.discountText);
         }
     }
 }
+

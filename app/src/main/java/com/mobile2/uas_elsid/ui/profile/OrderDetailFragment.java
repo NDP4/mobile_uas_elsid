@@ -108,15 +108,25 @@ public class OrderDetailFragment extends Fragment {
                 order.getShippingPostalCode());
         binding.shippingAddressText.setText(address);
 
+        // Set items to adapter
         adapter.setItems(order.getItems());
+
+        // Set discount info if available
+        if (order.getCouponUsage() != null) {
+            adapter.setDiscountInfo(
+                order.getCouponUsage().getDiscountAmount(),
+                order.getCouponUsage().getCoupon().getCode()
+            );
+        }
 
         // Update order summary
         binding.subtotalText.setText(formatPrice(order.getSubtotal()));
         binding.shippingCostText.setText(formatPrice(order.getShippingCost()));
 
-        if (order.getDiscountAmount() > 0) {
+        // Show discount in summary if available
+        if (order.getCouponUsage() != null) {
             binding.discountContainer.setVisibility(View.VISIBLE);
-            binding.discountText.setText("-" + formatPrice(order.getDiscountAmount()));
+            binding.discountText.setText("-" + formatPrice(order.getCouponUsage().getDiscountAmount()));
         } else {
             binding.discountContainer.setVisibility(View.GONE);
         }

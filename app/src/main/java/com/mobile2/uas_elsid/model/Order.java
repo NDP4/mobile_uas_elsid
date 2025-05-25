@@ -48,13 +48,18 @@ public class Order {
 
     @SerializedName("user")
     private User user;
+
     @SerializedName("created_at")
     private String createdAt;
+
     @SerializedName("discount_amount")
     private int discountAmount;
+
     @SerializedName("subtotal")
     private int subtotal;
 
+    @SerializedName("coupon_usage")
+    private CouponUsage couponUsage;
 
     // Getters
     public int getId() { return id; }
@@ -74,7 +79,6 @@ public class Order {
     public User getUser() { return user; }
     public String getCreatedAt() { return createdAt; }
     public int getDiscountAmount() { return discountAmount; }
-//    public int getSubtotal() { return subtotal; }
     public int getSubtotal() {
         if (items != null && !items.isEmpty()) {
             int calculatedSubtotal = 0;
@@ -85,4 +89,24 @@ public class Order {
         }
         return 0;
     }
+    public CouponUsage getCouponUsage() {
+        return couponUsage;
+    }
+
+    public static class CouponUsage {
+        @SerializedName("discount_amount")
+        private int discountAmount;
+
+        @SerializedName("coupon")
+        private Coupon coupon;
+
+        public int getDiscountAmount() {
+            return discountAmount;
+        }
+
+        public Coupon getCoupon() {
+            return coupon;
+        }
+    }
 }
+
