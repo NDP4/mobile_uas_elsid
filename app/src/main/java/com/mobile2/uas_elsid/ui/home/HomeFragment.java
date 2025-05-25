@@ -95,6 +95,8 @@ public class HomeFragment extends Fragment implements CategoryAdapter.OnCategory
     private SwipeRefreshLayout swipeRefresh;
     private SearchSuggestionsAdapter searchAdapter;
     private List<Product> allProducts = new ArrayList<>();
+    private RecyclerView recommendedProductsRecyclerView;
+    private ProductAdapter recommendedProductsAdapter;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -159,6 +161,8 @@ public class HomeFragment extends Fragment implements CategoryAdapter.OnCategory
         loadPopularProducts();
         setupSearch();
         setupSearchViewInteraction();
+        setupRecommendedProducts();
+        loadRecommendedProducts();
 
         return binding.getRoot();
     }
@@ -713,6 +717,64 @@ public class HomeFragment extends Fragment implements CategoryAdapter.OnCategory
         }
     }
 
+    private void setupRecommendedProducts() {
+        recommendedProductsRecyclerView = binding.recommendedProductsRecyclerView;
+        recommendedProductsAdapter = new ProductAdapter(requireContext());
+        recommendedProductsRecyclerView.setLayoutManager(new GridLayoutManager(getContext(), 2));
+        recommendedProductsRecyclerView.setAdapter(recommendedProductsAdapter);
+
+        recommendedProductsAdapter.setOnProductClickListener(product -> {
+            Bundle bundle = new Bundle();
+            bundle.putInt("product_id", product.getId());
+            Navigation.findNavController(requireView())
+                    .navigate(R.id.navigation_product_detail, bundle);
+        });
+    }
+
+    private void loadRecommendedProducts() {
+        ApiClient.getClient().getProducts().enqueue(new Callback<ProductResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<ProductResponse> call, @NonNull Response<ProductResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    List<Product> products = response.body().getProducts();
+                    if (products != null && !products.isEmpty()) {
+                        // Menghitung rasio view-to-purchase untuk setiap produk
+                        List<Product> recommendedProducts = new ArrayList<>();
+                        for (Product product : products) {
+                            if (product.getPurchaseCount() > 0) {
+                                double ratio = (double) product.getViewCount() / product.getPurchaseCount();
+                                // Jika rasio view-to-purchase lebih rendah, berarti produk lebih efektif dalam konversi
+                                if (ratio <= 10) { // Threshold bisa disesuaikan
+                                    recommendedProducts.add(product);
+                                }
+                            }
+                        }
+
+                        // Urutkan berdasarkan rasio view-to-purchase
+                        Collections.sort(recommendedProducts, (p1, p2) -> {
+                            double ratio1 = (double) p1.getViewCount() / p1.getPurchaseCount();
+                            double ratio2 = (double) p2.getViewCount() / p2.getPurchaseCount();
+                            return Double.compare(ratio1, ratio2);
+                        });
+
+                        // Ambil 2 produk teratas
+                        if (recommendedProducts.size() > 2) {
+                            recommendedProducts = recommendedProducts.subList(0, 2);
+                        }
+
+                        recommendedProductsAdapter.setProducts(recommendedProducts);
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ProductResponse> call, @NonNull Throwable t) {
+                Toasty.error(requireContext(), "Failed to load recommended products: " + t.getMessage(),
+                        Toasty.LENGTH_SHORT).show();
+            }
+        });
+    }
+
     @Override
     public void onDestroyView() {
         super.onDestroyView();
@@ -724,3 +786,4 @@ public class HomeFragment extends Fragment implements CategoryAdapter.OnCategory
         binding = null;
     }
 }
+

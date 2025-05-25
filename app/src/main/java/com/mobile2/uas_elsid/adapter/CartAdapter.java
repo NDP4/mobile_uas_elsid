@@ -34,6 +34,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder> {
     public interface CartItemListener {
         void onQuantityChanged();
         void onItemRemoved();
+        void onProductClicked(int productId);
     }
 
     public CartAdapter(Context context, CartItemListener listener, String userId) {
@@ -92,6 +93,13 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder> {
 
             // Set quantity
             holder.quantityText.setText(String.valueOf(item.getQuantity()));
+
+            // Add click listener to the whole item
+            holder.itemView.setOnClickListener(v -> {
+                if (listener != null) {
+                    listener.onProductClicked(item.getProduct().getId());
+                }
+            });
 
             // Load image safely
             if (item.getProduct().getImages() != null && !item.getProduct().getImages().isEmpty()) {

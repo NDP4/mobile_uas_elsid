@@ -40,6 +40,10 @@ public class WishlistFragment extends Fragment {
         binding = FragmentWishlistBinding.inflate(inflater, container, false);
         sessionManager = new SessionManager(requireContext());
 
+        binding.backButton.setOnClickListener(v -> {
+            requireActivity().onBackPressed();
+        });
+
         if (!sessionManager.isLoggedIn()) {
             showLoginDialog();
             return binding.getRoot();

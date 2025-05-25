@@ -34,10 +34,13 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="end|top"
                     android:layout_margin="16dp"
+                    app:elevation="0dp"
                     app:fabSize="mini"
                     app:srcCompat="@drawable/ic_favorite_border"
                     app:tint="@color/error"
-                    app:backgroundTint="@color/background"/>
+                    app:backgroundTint="@android:color/transparent"
+                    android:alpha="0.8"
+                    app:borderWidth="0dp"/>
             </FrameLayout>
 
             <com.google.android.material.tabs.TabLayout
@@ -250,12 +253,27 @@
                     android:orientation="vertical"
                     android:padding="16dp">
 
-                    <TextView
+                    <RelativeLayout
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Reviews &amp; Ratings"
-                        android:textSize="16sp"
-                        android:textStyle="bold"/>
+                        android:layout_height="wrap_content">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Reviews &amp; Ratings"
+                            android:textSize="16sp"
+                            android:textStyle="bold"/>
+
+                        <TextView
+                            android:id="@+id/seeAllReviewsButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="See All"
+                            android:textColor="@color/primary"
+                            android:textSize="14sp"
+                            android:padding="8dp"
+                            android:layout_alignParentEnd="true"/>
+                    </RelativeLayout>
 
                     <!-- Rating Summary -->
                     <LinearLayout
@@ -306,6 +324,15 @@
                         </LinearLayout>
                     </LinearLayout>
 
+                    <!-- No Reviews Text -->
+                    <TextView
+                        android:id="@+id/noReviewsText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:gravity="center"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="14sp"/>
                     <!-- Reviews List -->
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/reviewsRecyclerView"
@@ -412,3 +439,4 @@
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
+

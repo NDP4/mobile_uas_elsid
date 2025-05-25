@@ -13,7 +13,7 @@
 
     <item
         android:id="@+id/navigation_checkout"
-        android:icon="@drawable/ic_shop"
+        android:icon="@drawable/ic_cart1"
         android:title="@string/title_checkout" />
 
     <item

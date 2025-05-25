@@ -47,6 +47,10 @@ public class OrderHistoryFragment extends Fragment implements OrderHistoryAdapte
         binding = FragmentOrderHistoryBinding.inflate(inflater, container, false);
         sessionManager = new SessionManager(requireContext());
 
+        binding.backButton.setOnClickListener(v -> {
+            requireActivity().onBackPressed();
+        });
+
         setupRecyclerView();
         loadOrderHistory();
 

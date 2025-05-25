@@ -32,4 +32,7 @@
         <item name="itemTextColor">@color/bottom_nav_color</item>
         <item name="itemRippleColor">@color/primary_light</item>
     </style>
+    <style name="RoundedCorners4dp">
+        <item name="cornerSize">4dp</item>
+    </style>
 </resources>

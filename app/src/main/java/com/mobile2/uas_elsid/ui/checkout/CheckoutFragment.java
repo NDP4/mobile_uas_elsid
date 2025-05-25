@@ -111,6 +111,14 @@ public class CheckoutFragment extends Fragment implements CartAdapter.CartItemLi
         updateEmptyState();
     }
 
+    @Override
+    public void onProductClicked(int productId) {
+        Bundle args = new Bundle();
+        args.putInt("product_id", productId);
+        NavController navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment_activity_home);
+        navController.navigate(R.id.navigation_product_detail, args);
+    }
+
     private void updateEmptyState() {
         CartManager.getInstance(requireContext()).getCartItems(new CartManager.CartCallback() {
             @Override
@@ -176,3 +184,4 @@ public class CheckoutFragment extends Fragment implements CartAdapter.CartItemLi
         binding = null;
     }
 }
+

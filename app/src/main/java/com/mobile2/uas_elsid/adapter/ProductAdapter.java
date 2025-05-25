@@ -7,6 +7,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.RatingBar;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
@@ -19,7 +20,9 @@ import com.mobile2.uas_elsid.api.ApiClient;
 import com.mobile2.uas_elsid.api.ApiService;
 import com.mobile2.uas_elsid.api.response.WishlistCheckResponse;
 import com.mobile2.uas_elsid.api.response.WishlistResponse;
+import com.mobile2.uas_elsid.api.response.ReviewResponse;
 import com.mobile2.uas_elsid.model.Product;
+import com.mobile2.uas_elsid.model.ProductReview;
 import com.mobile2.uas_elsid.utils.SessionManager;
 
 import java.text.NumberFormat;
@@ -117,6 +120,37 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
 
         // Wishlist button setup
         setupWishlistButton(holder, product);
+
+        // Load product reviews to calculate average rating
+        apiService.getProductReviews(product.getId()).enqueue(new Callback<ReviewResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<ReviewResponse> call, @NonNull Response<ReviewResponse> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().getReviews() != null) {
+                    List<ProductReview> reviews = response.body().getReviews();
+                    if (!reviews.isEmpty()) {
+                        float totalRating = 0;
+                        for (ProductReview review : reviews) {
+                            totalRating += review.getRating();
+                        }
+                        float averageRating = totalRating / reviews.size();
+
+                        holder.ratingBar.setRating(averageRating);
+                        holder.ratingText.setText(String.format(Locale.getDefault(), "%.1f", averageRating));
+                        holder.ratingBar.setVisibility(View.VISIBLE);
+                        holder.ratingText.setVisibility(View.VISIBLE);
+                    } else {
+                        holder.ratingBar.setVisibility(View.GONE);
+                        holder.ratingText.setVisibility(View.GONE);
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ReviewResponse> call, @NonNull Throwable t) {
+                holder.ratingBar.setVisibility(View.GONE);
+                holder.ratingText.setVisibility(View.GONE);
+            }
+        });
     }
 
     private void setupWishlistButton(@NonNull ViewHolder holder, Product product) {
@@ -252,7 +286,8 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
         ImageView productImage;
         TextView titleText, categoryText, viewCountText, priceText;
         TextView originalPriceText, discountText, soldOutLabel;
-        TextView purchaseCountText;
+        TextView purchaseCountText, ratingText;
+        RatingBar ratingBar;
         FloatingActionButton wishlistButton;
 
         ViewHolder(View itemView) {
@@ -267,6 +302,8 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
             discountText = itemView.findViewById(R.id.discountText);
             soldOutLabel = itemView.findViewById(R.id.soldOutLabel);
             wishlistButton = itemView.findViewById(R.id.wishlistButton);
+            ratingBar = itemView.findViewById(R.id.ratingBar);
+            ratingText = itemView.findViewById(R.id.ratingText);
         }
     }
 }

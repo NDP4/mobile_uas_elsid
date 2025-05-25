@@ -7,21 +7,27 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.tabs.TabLayoutMediator;
 import com.mobile2.uas_elsid.LoginActivity;
 import com.mobile2.uas_elsid.R;
+import com.mobile2.uas_elsid.adapter.ProductAdapter;
 import com.mobile2.uas_elsid.adapter.ReviewAdapter;
 import com.mobile2.uas_elsid.api.ApiClient;
 import com.mobile2.uas_elsid.api.response.ProductDetailResponse;
@@ -37,10 +43,12 @@ import com.mobile2.uas_elsid.model.ProductVariant;
 
 import java.io.IOException;
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.mobile2.uas_elsid.adapter.ImageSliderAdapter;
 import com.mobile2.uas_elsid.utils.CartManager;
@@ -63,6 +71,9 @@ public class ProductDetailFragment extends Fragment {
     private FloatingActionButton wishlistButton;
     private boolean isInWishlist = false;
     private int productId;
+    private RecyclerView recommendationsRecyclerView;
+    private ProductAdapter recommendationsAdapter;
+    private List<ProductReview> allReviews = new ArrayList<>();
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
@@ -90,6 +101,7 @@ public class ProductDetailFragment extends Fragment {
         setupImageSlider();
         setupReviews();
         setupAddToCart();
+        setupRecommendations();
         return binding.getRoot();
     }
 
@@ -261,6 +273,7 @@ public class ProductDetailFragment extends Fragment {
                         updateViewCount(productId);
                         loadReviews(productId);
                         setupWishlistButton();
+                        loadRecommendations();
                     } else {
                         showError("Product not found");
                     }
@@ -312,8 +325,12 @@ public class ProductDetailFragment extends Fragment {
     private void updateUI(Product product) {
         binding.titleText.setText(product.getTitle());
         binding.categoryText.setText(product.getCategory());
+        binding.categoryText.setClickable(true);
         binding.descriptionText.setText(product.getDescription());
         binding.viewCountText.setText(String.format("%d views", product.getViewCount()));
+
+        // Setup category chip click functionality
+        setupCategoryChip();
 
         if (product.getPurchaseCount() > 0) {
             binding.purchaseCountText.setText(String.format("%d sold", product.getPurchaseCount()));
@@ -598,26 +615,41 @@ public class ProductDetailFragment extends Fragment {
                     System.out.println("Number of reviews: " + (reviews != null ? reviews.size() : "null"));
 
                     if (reviews != null && !reviews.isEmpty()) {
-                        reviewAdapter.setReviews(reviews);
+                        // Save all reviews
+                        allReviews = new ArrayList<>(reviews);
+
+                        // Show rating summary and other review components
+                        binding.averageRatingText.setVisibility(View.VISIBLE);
+                        binding.averageRatingBar.setVisibility(View.VISIBLE);
+                        binding.totalReviewsText.setVisibility(View.VISIBLE);
+                        binding.noReviewsText.setVisibility(View.GONE);
+                        binding.reviewsRecyclerView.setVisibility(View.VISIBLE);
+
+                        // Show only first 3 reviews in the main view
+                        List<ProductReview> limitedReviews = reviews.size() > 1 ?
+                            reviews.subList(0, 1) : reviews;
+
+                        reviewAdapter.setReviews(limitedReviews);
                         calculateAverageRating(reviews);
+
+                        // Show/hide see all button based on review count
+                        binding.seeAllReviewsButton.setVisibility(
+                            reviews.size() > 1 ? View.VISIBLE : View.GONE);
+
                         binding.reviewsSection.setVisibility(View.VISIBLE);
                         System.out.println("Reviews populated and section made visible");
                     } else {
+                        // Show "No reviews yet" message
+                        binding.averageRatingText.setVisibility(View.GONE);
+                        binding.averageRatingBar.setVisibility(View.GONE);
+                        binding.totalReviewsText.setVisibility(View.GONE);
+                        binding.noReviewsText.setVisibility(View.VISIBLE);
+                        binding.noReviewsText.setText("Belum ada rating dan ulasan");
+                        binding.reviewsRecyclerView.setVisibility(View.GONE);
+                        binding.seeAllReviewsButton.setVisibility(View.GONE);
                         binding.reviewsSection.setVisibility(View.VISIBLE);
                         System.out.println("No reviews available");
                     }
-                } else {
-                    // Safe error body handling
-                    String errorMessage = "Unknown error";
-                    if (response.errorBody() != null) {
-                        try {
-                            errorMessage = response.errorBody().string();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            errorMessage = "Error reading error response";
-                        }
-                    }
-                    System.out.println("Review response unsuccessful: " + errorMessage);
                 }
             }
 
@@ -625,9 +657,18 @@ public class ProductDetailFragment extends Fragment {
             public void onFailure(@NonNull Call<ReviewResponse> call, @NonNull Throwable t) {
                 System.out.println("Review loading failed: " + t.getMessage());
                 t.printStackTrace();
+                // Show error state
+                binding.averageRatingText.setVisibility(View.GONE);
+                binding.averageRatingBar.setVisibility(View.GONE);
+                binding.totalReviewsText.setVisibility(View.GONE);
+                binding.noReviewsText.setVisibility(View.VISIBLE);
+                binding.noReviewsText.setText("Gagal memuat ulasan");
+                binding.reviewsRecyclerView.setVisibility(View.GONE);
+                binding.seeAllReviewsButton.setVisibility(View.GONE);
             }
         });
     }
+
     private void setupReviews() {
         // Debug log
         System.out.println("Setting up reviews section");
@@ -644,8 +685,46 @@ public class ProductDetailFragment extends Fragment {
                 new DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL)
         );
 
-        // Debug log
-        System.out.println("Reviews section setup complete");
+        // Setup see all reviews button
+        binding.seeAllReviewsButton.setOnClickListener(v -> showAllReviewsBottomSheet());
+    }
+
+    private void showAllReviewsBottomSheet() {
+        View bottomSheetView = getLayoutInflater().inflate(R.layout.bottom_sheet_all_reviews, null);
+        BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
+        dialog.setContentView(bottomSheetView);
+
+        // Setup close button
+        bottomSheetView.findViewById(R.id.closeButton).setOnClickListener(v -> dialog.dismiss());
+
+        // Setup rating summary
+        TextView averageRatingText = bottomSheetView.findViewById(R.id.averageRatingText);
+        RatingBar averageRatingBar = bottomSheetView.findViewById(R.id.averageRatingBar);
+        TextView totalReviewsText = bottomSheetView.findViewById(R.id.totalReviewsText);
+
+        if (!allReviews.isEmpty()) {
+            float totalRating = 0;
+            for (ProductReview review : allReviews) {
+                totalRating += review.getRating();
+            }
+            float averageRating = totalRating / allReviews.size();
+
+            averageRatingText.setText(String.format(Locale.getDefault(), "%.1f", averageRating));
+            averageRatingBar.setRating(averageRating);
+            totalReviewsText.setText(String.format(Locale.getDefault(),
+                "Based on %d reviews", allReviews.size()));
+        }
+
+        // Setup reviews list
+        RecyclerView allReviewsRecyclerView = bottomSheetView.findViewById(R.id.allReviewsRecyclerView);
+        ReviewAdapter allReviewsAdapter = new ReviewAdapter(requireContext());
+        allReviewsRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        allReviewsRecyclerView.addItemDecoration(
+                new DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL));
+        allReviewsRecyclerView.setAdapter(allReviewsAdapter);
+        allReviewsAdapter.setReviews(allReviews);
+
+        dialog.show();
     }
 
     private void calculateAverageRating(List<ProductReview> reviews) {
@@ -661,5 +740,103 @@ public class ProductDetailFragment extends Fragment {
         binding.averageRatingBar.setRating(averageRating);
         binding.totalReviewsText.setText(String.format(Locale.getDefault(),
                 "Based on %d reviews", reviews.size()));
+    }
+
+    private void setupCategoryChip() {
+        binding.categoryText.setOnClickListener(v -> {
+            if (currentProduct != null) {
+                Bundle bundle = new Bundle();
+                bundle.putString("category", currentProduct.getCategory());
+                Navigation.findNavController(requireView())
+                        .navigate(R.id.navigation_product, bundle);
+            }
+        });
+    }
+
+    private void setupRecommendations() {
+        recommendationsRecyclerView = binding.recommendationsRecyclerView;
+        recommendationsAdapter = new ProductAdapter(requireContext());
+        recommendationsRecyclerView.setLayoutManager(new GridLayoutManager(requireContext(), 2));
+        recommendationsRecyclerView.setAdapter(recommendationsAdapter);
+
+        recommendationsAdapter.setOnProductClickListener(product -> {
+            Bundle bundle = new Bundle();
+            bundle.putInt("product_id", product.getId());
+            Navigation.findNavController(requireView())
+                    .navigate(R.id.navigation_product_detail, bundle);
+        });
+    }
+
+    private void loadRecommendations() {
+        if (currentProduct == null) return;
+
+        ApiClient.getClient().getProducts().enqueue(new Callback<ProductResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<ProductResponse> call, @NonNull Response<ProductResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    List<Product> allProducts = response.body().getProducts();
+                    if (allProducts != null && !allProducts.isEmpty()) {
+                        // Filter out current product
+                        allProducts.removeIf(p -> p.getId() == currentProduct.getId());
+
+                        // First, try to find products in the same category
+                        List<Product> sameCategory = allProducts.stream()
+                                .filter(p -> p.getCategory().equals(currentProduct.getCategory()))
+                                .collect(Collectors.toList());
+
+                        List<Product> recommendations = new ArrayList<>();
+
+                        // If we have products in the same category with good view-to-purchase ratio
+                        for (Product product : sameCategory) {
+                            if (product.getPurchaseCount() > 0) {
+                                double ratio = (double) product.getViewCount() / product.getPurchaseCount();
+                                if (ratio <= 10) { // Threshold bisa disesuaikan
+                                    recommendations.add(product);
+                                }
+                            }
+                        }
+
+                        // If we don't have enough recommendations from the same category
+                        if (recommendations.size() < 2) {
+                            // Get products from other categories with good ratios
+                            List<Product> otherCategories = allProducts.stream()
+                                    .filter(p -> !p.getCategory().equals(currentProduct.getCategory()))
+                                    .filter(p -> p.getPurchaseCount() > 0)
+                                    .filter(p -> {
+                                        double ratio = (double) p.getViewCount() / p.getPurchaseCount();
+                                        return ratio <= 10;
+                                    })
+                                    .collect(Collectors.toList());
+
+                            // Sort by view-to-purchase ratio
+                            otherCategories.sort((p1, p2) -> {
+                                double ratio1 = (double) p1.getViewCount() / p1.getPurchaseCount();
+                                double ratio2 = (double) p2.getViewCount() / p2.getPurchaseCount();
+                                return Double.compare(ratio1, ratio2);
+                            });
+
+                            // Add products from other categories until we have 2 recommendations
+                            while (recommendations.size() < 2 && !otherCategories.isEmpty()) {
+                                recommendations.add(otherCategories.remove(0));
+                            }
+                        }
+
+                        // Show recommendations if we have any
+                        if (!recommendations.isEmpty()) {
+                            binding.recommendationsSection.setVisibility(View.VISIBLE);
+                            recommendationsAdapter.setProducts(recommendations);
+                        } else {
+                            binding.recommendationsSection.setVisibility(View.GONE);
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ProductResponse> call, @NonNull Throwable t) {
+                binding.recommendationsSection.setVisibility(View.GONE);
+                Toasty.error(requireContext(), "Failed to load recommendations: " + t.getMessage()).show();
+            }
+        });
     }
 }
