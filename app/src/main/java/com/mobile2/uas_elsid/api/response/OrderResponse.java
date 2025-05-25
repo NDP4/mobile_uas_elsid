@@ -17,6 +17,8 @@ public class OrderResponse {
 
     @SerializedName("orders")
     private List<Order> orders;
+    @SerializedName("order")
+    private Order order;
 
     public int getStatus() {
         return status;
@@ -32,6 +34,9 @@ public class OrderResponse {
 
     public List<Order> getOrders() {
         return orders;
+    }
+    public Order getOrder() {
+        return order;
     }
 
     public static class OrderData {

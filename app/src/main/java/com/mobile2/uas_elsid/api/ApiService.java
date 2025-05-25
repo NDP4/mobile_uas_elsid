@@ -113,8 +113,10 @@ public interface ApiService {
     @POST("api/orders")
     Call<OrderResponse> createOrder(@Body Map<String, Object> orderData);
 
+//    @POST("api/payments/create")
+//    Call<PaymentResponse> createPayment(@Body Map<String, Integer> request);
     @POST("api/payments/create")
-    Call<PaymentResponse> createPayment(@Body Map<String, Integer> request);
+    Call<PaymentResponse> createPayment(@Body Map<String, Object> request);
 
     @GET("api/payments/status/{orderId}")
     Call<PaymentResponse> checkPaymentStatus(@Path("orderId") int orderId);
