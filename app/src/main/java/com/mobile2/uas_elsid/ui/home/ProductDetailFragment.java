@@ -2,6 +2,9 @@ package com.mobile2.uas_elsid.ui.home;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.graphics.Color;
+import android.view.View;
+import android.view.WindowManager;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -12,6 +15,7 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.viewpager2.widget.ViewPager2;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -27,8 +31,10 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.tabs.TabLayoutMediator;
 import com.mobile2.uas_elsid.LoginActivity;
 import com.mobile2.uas_elsid.R;
+import com.mobile2.uas_elsid.adapter.ImageIndicatorAdapter;
 import com.mobile2.uas_elsid.adapter.ProductAdapter;
 import com.mobile2.uas_elsid.adapter.ReviewAdapter;
+import com.mobile2.uas_elsid.adapter.VariantAdapter;
 import com.mobile2.uas_elsid.api.ApiClient;
 import com.mobile2.uas_elsid.api.response.ProductDetailResponse;
 import com.mobile2.uas_elsid.api.response.ProductResponse;
@@ -38,6 +44,7 @@ import com.mobile2.uas_elsid.api.response.WishlistResponse;
 import com.mobile2.uas_elsid.databinding.FragmentProductDetailBinding;
 import com.mobile2.uas_elsid.model.CartItem;
 import com.mobile2.uas_elsid.model.Product;
+import com.mobile2.uas_elsid.model.ProductImage;
 import com.mobile2.uas_elsid.model.ProductReview;
 import com.mobile2.uas_elsid.model.ProductVariant;
 
@@ -74,12 +81,24 @@ public class ProductDetailFragment extends Fragment {
     private RecyclerView recommendationsRecyclerView;
     private ProductAdapter recommendationsAdapter;
     private List<ProductReview> allReviews = new ArrayList<>();
+    private ImageIndicatorAdapter indicatorAdapter;
+    private VariantAdapter variantAdapter;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        // Set status bar transparent
+        requireActivity().getWindow().setStatusBarColor(Color.TRANSPARENT);
+        requireActivity().getWindow().getDecorView().setSystemUiVisibility(
+            View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+
         binding = FragmentProductDetailBinding.inflate(inflater, container, false);
         sessionManager = new SessionManager(requireContext());
+
+        // Setup back button
+        binding.backButton.setOnClickListener(v -> {
+            requireActivity().onBackPressed();
+        });
 
         // Get product ID from arguments
         if (getArguments() != null) {
@@ -109,11 +128,28 @@ public class ProductDetailFragment extends Fragment {
         imageSliderAdapter = new ImageSliderAdapter(requireContext());
         binding.imageSlider.setAdapter(imageSliderAdapter);
 
-        // Setup indicator
-        TabLayoutMediator tabLayoutMediator = new TabLayoutMediator(
-                binding.imageIndicator, binding.imageSlider, (tab, position) -> {});
-        tabLayoutMediator.attach();
+        // Setup RecyclerView untuk image indicator
+        indicatorAdapter = new ImageIndicatorAdapter(binding.imageSlider);
+        binding.imageIndicator.setLayoutManager(
+            new LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false));
+        binding.imageIndicator.setAdapter(indicatorAdapter);
+
+        // Sync ViewPager2 dengan indicator
+        binding.imageSlider.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+            @Override
+            public void onPageSelected(int position) {
+                indicatorAdapter.setSelectedPosition(position);
+            }
+        });
     }
+
+    private void updateProductImages(List<ProductImage> images) {
+        if (images != null && !images.isEmpty()) {
+            imageSliderAdapter.setImages(images);
+            indicatorAdapter.setImages(images);
+        }
+    }
+
     private void setupWishlistButton() {
         if (!sessionManager.isLoggedIn()) {
             wishlistButton.setVisibility(View.GONE);
@@ -343,9 +379,6 @@ public class ProductDetailFragment extends Fragment {
         int finalPrice = calculateFinalPrice(product);
         binding.finalPriceText.setText(formatPrice(finalPrice));
 
-        // set up varian if available
-        setupVariantsView(product);
-
         // Handle variants if any
         if (product.hasVariants() && product.getVariants() != null) {
             setupVariants(product.getVariants());
@@ -367,46 +400,50 @@ public class ProductDetailFragment extends Fragment {
             binding.stockText.setText(String.format("Stock: %d", product.getMainStock()));
             binding.addToCartButton.setEnabled(product.getMainStock() > 0);
             binding.variantsLayout.setVisibility(View.GONE);
+            binding.variantsLabel.setVisibility(View.GONE);
         }
 
         // Update image slider
         if (product.getImages() != null && !product.getImages().isEmpty()) {
-            imageSliderAdapter.setImages(product.getImages());
+            updateProductImages(product.getImages());
         }
     }
 
     private void setupVariants(List<ProductVariant> variants) {
         if (variants == null || variants.isEmpty()) {
             binding.variantsLayout.setVisibility(View.GONE);
+            binding.variantsLabel.setVisibility(View.GONE);
             return;
         }
 
         binding.variantsLayout.setVisibility(View.VISIBLE);
-        binding.variantsGroup.removeAllViews();
+        binding.variantsLabel.setVisibility(View.VISIBLE);
 
-        // Create radio buttons for each variant
-        for (ProductVariant variant : variants) {
-            RadioButton radioButton = new RadioButton(requireContext());
-            radioButton.setText(getVariantText(variant));
-            radioButton.setTag(variant);
-            binding.variantsGroup.addView(radioButton);
+        // Initialize variant adapter if needed
+        if (variantAdapter == null) {
+            variantAdapter = new VariantAdapter(requireContext(), variant -> {
+                selectedVariant = variant;
+                updatePriceAndStock(variant);
+            });
+
+            binding.variantsRecyclerView.setLayoutManager(
+                new LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false));
+            binding.variantsRecyclerView.setAdapter(variantAdapter);
         }
 
-        // Handle variant selection
-        binding.variantsGroup.setOnCheckedChangeListener((group, checkedId) -> {
-            RadioButton selectedButton = group.findViewById(checkedId);
-            if (selectedButton != null) {
-                selectedVariant = (ProductVariant) selectedButton.getTag();
-                updatePriceAndStock(selectedVariant);
-            }
-        });
+        // Set variants to adapter
+        variantAdapter.setVariants(variants);
 
-        // Select first variant by default
-        if (!variants.isEmpty()) {
-            RadioButton firstButton = (RadioButton) binding.variantsGroup.getChildAt(0);
-            firstButton.setChecked(true);
+        // Select first variant by default if available and in stock
+        for (ProductVariant variant : variants) {
+            if (variant.getStock() > 0) {
+                selectedVariant = variant;
+                updatePriceAndStock(variant);
+                break;
+            }
         }
     }
+
     private void updatePriceAndStock(ProductVariant variant) {
         // Update price display
         if (variant.getDiscount() > 0) {
@@ -449,6 +486,10 @@ public class ProductDetailFragment extends Fragment {
 
     @Override
     public void onDestroyView() {
+        // Restore status bar color and flags when leaving fragment
+        requireActivity().getWindow().setStatusBarColor(ContextCompat.getColor(requireContext(), R.color.primary_dark));
+        requireActivity().getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
+
         super.onDestroyView();
         binding = null;
     }
@@ -507,36 +548,6 @@ public class ProductDetailFragment extends Fragment {
 
         // Enable/disable add to cart button based on stock
         binding.addToCartButton.setEnabled(variant.getStock() > 0);
-    }
-
-    private void setupVariantsView(Product product) {
-        if (product.getVariants() != null && !product.getVariants().isEmpty()) {
-            binding.variantsLayout.setVisibility(View.VISIBLE);
-            binding.variantsLabel.setVisibility(View.VISIBLE);
-
-            RadioGroup variantsGroup = binding.variantsGroup;
-            variantsGroup.removeAllViews();
-
-            for (ProductVariant variant : product.getVariants()) {
-                RadioButton radioButton = new RadioButton(requireContext());
-                radioButton.setText(String.format("%s - %s (%d in stock)",
-                        variant.getVariantName(),
-                        formatPrice(calculateFinalPrice(variant)),
-                        variant.getStock()));
-                radioButton.setTag(variant);
-
-                radioButton.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                    if (isChecked) {
-                        onVariantSelected(variant);
-                    }
-                });
-
-                variantsGroup.addView(radioButton);
-            }
-        } else {
-            binding.variantsLayout.setVisibility(View.GONE);
-            binding.variantsLabel.setVisibility(View.GONE);
-        }
     }
 
     private void setupAddToCart() {

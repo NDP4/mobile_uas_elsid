@@ -13,7 +13,15 @@
         <item name="android:textColorPrimary">@color/text_primary</item>
         <item name="android:textColorSecondary">@color/text_secondary</item>
         <item name="android:statusBarColor">@color/primary_dark</item>
+        <item name="android:windowLightStatusBar">false</item>
     </style>
 
     <style name="Theme.UAS_elsid" parent="Base.Theme.UAS_elsid" />
+
+    <!-- Transparent status bar theme for product detail -->
+<!--    <style name="Theme.UAS_elsid.TransparentStatusBar">-->
+<!--        <item name="android:statusBarColor">@android:color/transparent</item>-->
+<!--        <item name="android:windowLightStatusBar">true</item>-->
+<!--    </style>-->
 </resources>
+

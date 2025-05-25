@@ -1,32 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="false"
     android:background="@color/background">
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginBottom="80dp"
+        android:fitsSystemWindows="false"
         android:overScrollMode="never">
 
         <LinearLayout
             android:id="@+id/contentLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:fitsSystemWindows="false">
 
             <!-- Image Slider Section with Rounded Corners -->
             <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="450dp">
+                android:layout_height="450dp"
+                android:fitsSystemWindows="false">
 
                 <androidx.viewpager2.widget.ViewPager2
                     android:id="@+id/imageSlider"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent" />
+
+                <!-- Gradient overlay for better visibility -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="100dp"
+                    android:background="@drawable/gradient_overlay_top" />
+
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/backButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="start|top"
+                    android:layout_margin="16dp"
+                    app:elevation="0dp"
+                    app:fabSize="mini"
+                    app:srcCompat="@drawable/ic_arrow_back"
+                    app:tint="@color/text_white"
+                    app:backgroundTint="@android:color/transparent"
+                    android:alpha="1.0"
+                    app:borderWidth="0dp"/>
 
                 <com.google.android.material.floatingactionbutton.FloatingActionButton
                     android:id="@+id/wishlistButton"
@@ -37,22 +62,21 @@
                     app:elevation="0dp"
                     app:fabSize="mini"
                     app:srcCompat="@drawable/ic_favorite_border"
-                    app:tint="@color/error"
+                    app:tint="@color/text_white"
                     app:backgroundTint="@android:color/transparent"
-                    android:alpha="0.8"
+                    android:alpha="1.0"
                     app:borderWidth="0dp"/>
             </FrameLayout>
 
-            <com.google.android.material.tabs.TabLayout
+            <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/imageIndicator"
                 android:layout_width="wrap_content"
-                android:layout_height="20dp"
+                android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
-                android:layout_marginTop="-24dp"
-                android:background="@android:color/transparent"
-                app:tabBackground="@drawable/tab_selector"
-                app:tabGravity="center"
-                app:tabIndicatorHeight="0dp" />
+                android:layout_marginTop="8dp"
+                android:clipToPadding="false"
+                android:orientation="horizontal"
+                android:paddingHorizontal="16dp" />
 
             <!-- Product Info Section -->
             <LinearLayout
@@ -192,11 +216,14 @@
                         android:textStyle="bold"
                         android:textColor="@color/text_primary"/>
 
-                    <RadioGroup
-                        android:id="@+id/variantsGroup"
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/variantsRecyclerView"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"/>
+                        android:layout_marginTop="8dp"
+                        android:clipToPadding="false"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="4dp" />
                 </LinearLayout>
 
                 <!-- Description Section -->
