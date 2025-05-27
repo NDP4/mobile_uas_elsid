@@ -10,6 +10,8 @@ import android.provider.MediaStore;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.loader.content.CursorLoader;
@@ -20,14 +22,20 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.mobile2.uas_elsid.LoginActivity;
 import com.mobile2.uas_elsid.R;
 import com.mobile2.uas_elsid.api.ApiClient;
+import com.mobile2.uas_elsid.api.response.CityResponse;
+import com.mobile2.uas_elsid.api.response.ProvinceResponse;
 import com.mobile2.uas_elsid.api.response.UserResponse;
 import com.mobile2.uas_elsid.databinding.FragmentEditProfileBinding;
+import com.mobile2.uas_elsid.model.City;
+import com.mobile2.uas_elsid.model.Province;
 import com.mobile2.uas_elsid.utils.SessionManager;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -45,6 +53,13 @@ public class EditProfileFragment extends Fragment {
     private String selectedImagePath;
     private boolean isFragmentActive = true;
     private static final int PERMISSION_REQUEST_CODE = 123;
+
+    private List<Province> provinceList = new ArrayList<>();
+    private List<City> cityList = new ArrayList<>();
+    private ArrayAdapter<String> provinceAdapter;
+    private ArrayAdapter<String> cityAdapter;
+    private String selectedProvinceId;
+    private String selectedCityId;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
@@ -99,16 +114,15 @@ public class EditProfileFragment extends Fragment {
         String userId = sessionManager.getUserId();
         String email = sessionManager.getEmail();
 
-        // Debug logs
-        System.out.println("Debug - Pre-Update Profile Check:");
-        System.out.println("UserID from session: " + userId);
-        System.out.println("Email from session: " + email);
-
         // Validate user ID
         if (userId == null || userId.isEmpty()) {
             Toasty.error(requireContext(), "Invalid session").show();
             return;
         }
+
+        // Get selected province and city from spinners
+        String selectedProvince = binding.provinceSpinner.getText().toString();
+        String selectedCity = binding.citySpinner.getText().toString();
 
         // Create request map
         Map<String, String> updateData = new HashMap<>();
@@ -116,8 +130,8 @@ public class EditProfileFragment extends Fragment {
         updateData.put("fullname", binding.fullnameInput.getText().toString().trim());
         updateData.put("phone", binding.phoneInput.getText().toString().trim());
         updateData.put("address", binding.addressInput.getText().toString().trim());
-        updateData.put("city", binding.cityInput.getText().toString().trim());
-        updateData.put("province", binding.provinceInput.getText().toString().trim());
+        updateData.put("city", selectedCity);
+        updateData.put("province", selectedProvince);
         updateData.put("postal_code", binding.postalCodeInput.getText().toString().trim());
 
         // Show loading
@@ -134,14 +148,16 @@ public class EditProfileFragment extends Fragment {
                         if (response.isSuccessful() && response.body() != null) {
                             UserResponse userResponse = response.body();
                             if (userResponse.getStatus() == 1) {
-                                // Update session data
+                                // Update session data with IDs
                                 sessionManager.updateProfile(
                                         updateData.get("fullname"),
                                         updateData.get("phone"),
                                         updateData.get("address"),
                                         updateData.get("city"),
                                         updateData.get("province"),
-                                        updateData.get("postal_code")
+                                        updateData.get("postal_code"),
+                                        selectedProvinceId,
+                                        selectedCityId
                                 );
                                 Toasty.success(requireContext(), "Profile updated successfully").show();
                                 Navigation.findNavController(binding.getRoot()).navigateUp();
@@ -229,20 +245,6 @@ public class EditProfileFragment extends Fragment {
                 });
     }
 
-    // Helper method to get real path from URI
-//    private String getRealPathFromUri(Uri uri) {
-//        String[] projection = {MediaStore.Images.Media.DATA};
-//        CursorLoader loader = new CursorLoader(requireContext(), uri, projection, null, null, null);
-//        Cursor cursor = loader.loadInBackground();
-//        if (cursor == null) return null;
-//
-//        int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-//        cursor.moveToFirst();
-//        String result = cursor.getString(column_index);
-//        cursor.close();
-//        return result;
-//    }
-
     public void refreshAvatar() {
         String avatarPath = sessionManager.getAvatarPath();
         if (avatarPath != null && !avatarPath.isEmpty()) {
@@ -262,13 +264,126 @@ public class EditProfileFragment extends Fragment {
         }
     }
 
-
     private void setupUI() {
-        // Setup click listeners
         binding.saveButton.setOnClickListener(v -> saveUserData());
         binding.avatarImage.setOnClickListener(v -> openImagePicker());
         binding.toolbar.setNavigationOnClickListener(v ->
                 Navigation.findNavController(v).navigateUp());
+
+        // Setup adapters for province and city spinners
+        provinceAdapter = new ArrayAdapter<>(requireContext(),
+                android.R.layout.simple_dropdown_item_1line, new ArrayList<>());
+        cityAdapter = new ArrayAdapter<>(requireContext(),
+                android.R.layout.simple_dropdown_item_1line, new ArrayList<>());
+
+        binding.provinceSpinner.setAdapter(provinceAdapter);
+        binding.citySpinner.setAdapter(cityAdapter);
+
+        // Load provinces
+        loadProvinces();
+
+        // Province selection listener
+        binding.provinceSpinner.setOnItemClickListener((parent, view, position, id) -> {
+            String selectedProvince = provinceAdapter.getItem(position);
+            // Reset city spinner when province changes
+            binding.citySpinner.setText("", false);
+
+            // Find the selected province and save its ID
+            for (Province province : provinceList) {
+                if (province.getName().equals(selectedProvince)) {
+                    selectedProvinceId = province.getId(); // Add this as class variable
+                    loadCities(province.getId());
+                    break;
+                }
+            }
+        });
+
+        // City selection listener
+        binding.citySpinner.setOnItemClickListener((parent, view, position, id) -> {
+            String selectedCity = cityAdapter.getItem(position);
+            // Find and save the selected city ID
+            for (City city : cityList) {
+                if (city.getName().equals(selectedCity)) {
+                    selectedCityId = city.getId(); // Add this as class variable
+                    break;
+                }
+            }
+        });
+    }
+
+    private void loadProvinces() {
+        ApiClient.getClient().getProvinces().enqueue(new Callback<ProvinceResponse>() {
+            @Override
+            public void onResponse(Call<ProvinceResponse> call, Response<ProvinceResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    if (response.body().rajaongkir != null && response.body().rajaongkir.getProvinces() != null) {
+                        provinceList.clear();
+                        provinceList.addAll(response.body().rajaongkir.getProvinces());
+
+                        List<String> provinceNames = new ArrayList<>();
+                        for (Province province : provinceList) {
+                            provinceNames.add(province.getName());
+                        }
+
+                        provinceAdapter.clear();
+                        provinceAdapter.addAll(provinceNames);
+                        provinceAdapter.notifyDataSetChanged();
+
+                        // Set current province if exists
+                        String currentProvince = sessionManager.getProvince();
+                        if (currentProvince != null && !currentProvince.isEmpty()) {
+                            binding.provinceSpinner.setText(currentProvince, false);
+                            // Find and load cities for current province
+                            for (Province province : provinceList) {
+                                if (province.getName().equals(currentProvince)) {
+                                    loadCities(province.getId());
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ProvinceResponse> call, Throwable t) {
+                Toasty.error(requireContext(), "Failed to load provinces: " + t.getMessage()).show();
+            }
+        });
+    }
+
+    private void loadCities(String provinceId) {
+        ApiClient.getClient().getCities(provinceId).enqueue(new Callback<CityResponse>() {
+            @Override
+            public void onResponse(Call<CityResponse> call, Response<CityResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    if (response.body().rajaongkir != null && response.body().rajaongkir.getCities() != null) {
+                        cityList.clear();
+                        cityList.addAll(response.body().rajaongkir.getCities());
+
+                        List<String> cityNames = new ArrayList<>();
+                        for (City city : cityList) {
+                            cityNames.add(city.getName());
+                        }
+
+                        cityAdapter.clear();
+                        cityAdapter.addAll(cityNames);
+                        cityAdapter.notifyDataSetChanged();
+
+                        // Set current city if exists
+                        String currentCity = sessionManager.getCity();
+                        if (currentCity != null && !currentCity.isEmpty()) {
+                            binding.citySpinner.setText(currentCity, false);
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<CityResponse> call, Throwable t) {
+                Toasty.error(requireContext(), "Failed to load cities: " + t.getMessage()).show();
+            }
+        });
     }
 
     private void setupUserData() {
@@ -276,8 +391,8 @@ public class EditProfileFragment extends Fragment {
         binding.fullnameInput.setText(sessionManager.getFullname());
         binding.phoneInput.setText(sessionManager.getPhone());
         binding.addressInput.setText(sessionManager.getAddress());
-        binding.cityInput.setText(sessionManager.getCity());
-        binding.provinceInput.setText(sessionManager.getProvince());
+        binding.provinceSpinner.setText(sessionManager.getProvince(), false);
+        binding.citySpinner.setText(sessionManager.getCity(), false);
         binding.postalCodeInput.setText(sessionManager.getPostalCode());
 
         // Load avatar if exists
@@ -288,6 +403,12 @@ public class EditProfileFragment extends Fragment {
             loadImageFromPath(avatarPath);
         } else {
             System.out.println("No avatar path found in session"); // Debug log
+        }
+
+        // If province is set, load its cities
+        String currentProvince = sessionManager.getProvince();
+        if (currentProvince != null && !currentProvince.isEmpty()) {
+            loadProvinces(); // This will also load cities for the current province
         }
     }
 
@@ -379,8 +500,8 @@ public class EditProfileFragment extends Fragment {
         binding.fullnameInput.setText(sessionManager.getFullname());
         binding.phoneInput.setText(sessionManager.getPhone());
         binding.addressInput.setText(sessionManager.getAddress());
-        binding.cityInput.setText(sessionManager.getCity());
-        binding.provinceInput.setText(sessionManager.getProvince());
+        binding.citySpinner.setText(sessionManager.getCity(), false);
+        binding.provinceSpinner.setText(sessionManager.getProvince(), false);
         binding.postalCodeInput.setText(sessionManager.getPostalCode());
     }
 
@@ -414,147 +535,6 @@ public class EditProfileFragment extends Fragment {
         return isValid;
     }
 
-//    private void saveUserData() {
-//        // Save other profile data
-//        sessionManager.updateProfile(
-//                binding.fullnameInput.getText().toString(),
-//                binding.phoneInput.getText().toString(),
-//                binding.addressInput.getText().toString(),
-//                binding.cityInput.getText().toString(),
-//                binding.provinceInput.getText().toString(),
-//                binding.postalCodeInput.getText().toString()
-//        );
-//
-//        // Save avatar path if new image was selected
-//        if (selectedImagePath != null && !selectedImagePath.isEmpty()) {
-//            sessionManager.saveAvatarPath(selectedImagePath);
-//        }
-//    }
-//    private void saveUserData() {
-//        if (binding == null) return;
-//
-//        // Validasi user ID
-//        String userId = sessionManager.getUserId();
-//        // debug log untuk user ID
-//        System.out.println("Updateing profile for user ID: " + userId);
-//        if (userId == null || userId.isEmpty()) {
-//            Toasty.error(requireContext(), "User session invalid").show();
-//            return;
-//        }
-//
-//        // Get input values
-//        String fullname = binding.fullnameInput.getText().toString().trim();
-//        String phone = binding.phoneInput.getText().toString().trim();
-//        String address = binding.addressInput.getText().toString().trim();
-//        String city = binding.cityInput.getText().toString().trim();
-//        String province = binding.provinceInput.getText().toString().trim();
-//        String postalCode = binding.postalCodeInput.getText().toString().trim();
-//
-//        // Validasi input kosong
-//        if (fullname.isEmpty() || phone.isEmpty() || address.isEmpty() ||
-//                city.isEmpty() || province.isEmpty() || postalCode.isEmpty()) {
-//            Toasty.error(requireContext(), "Please fill all fields").show();
-//            return;
-//        }
-//
-//        // Show loading indicator
-//        binding.loadingIndicator.setVisibility(View.VISIBLE);
-//
-//        // Create request body
-//        Map<String, String> updateData = new HashMap<>();
-//        updateData.put("fullname", fullname);
-//        updateData.put("phone", phone);
-//        updateData.put("address", address);
-//        updateData.put("city", city);
-//        updateData.put("province", province);
-//        updateData.put("postal_code", postalCode);
-//
-//        // Make API call to update profile
-//        ApiClient.getClient().updateUser(userId, updateData)
-//                .enqueue(new Callback<UserResponse>() {
-//                    @Override
-//                    public void onResponse(Call<UserResponse> call, Response<UserResponse> response) {
-//                        if (binding == null || !isFragmentActive) return;
-//                        binding.loadingIndicator.setVisibility(View.GONE);
-//                        System.out.println("Update Response: " + response.code());
-//                        System.out.println("Response Body: " + response.body());
-//
-//
-//                        if (response.isSuccessful() && response.body() != null) {
-//                            UserResponse result = response.body();
-//                            if (result.getStatus() == 1) {
-//                                // Update session
-//                                sessionManager.updateProfile(fullname, phone, address, city, province, postalCode);
-//                                Toasty.success(requireContext(), "Profile updated successfully").show();
-//
-//                                // Upload avatar if selected
-//                                if (selectedImagePath != null && !selectedImagePath.isEmpty()) {
-//                                    uploadAvatar();
-//                                } else {
-//                                    Toasty.success(requireContext(), "Profile updated successfully").show();
-//                                    Navigation.findNavController(requireView()).navigateUp();
-//                                }
-//                            } else {
-//                                Toasty.error(requireContext(), result.getMessage()).show();
-//                            }
-//                        } else {
-//                            Toasty.error(requireContext(), "Failed to update profile").show();
-//                        }
-//                    }
-//
-//                    @Override
-//                    public void onFailure(Call<UserResponse> call, Throwable t) {
-//                        if (binding == null || !isFragmentActive) return;
-//                        binding.loadingIndicator.setVisibility(View.GONE);
-//                        Toasty.error(requireContext(), "Network error: " + t.getMessage()).show();
-//                    }
-//                });
-//
-//        // If new avatar is selected, upload it
-//        if (selectedImagePath != null && !selectedImagePath.isEmpty()) {
-//            uploadAvatar();
-//        }
-//    }
-//    private void uploadAvatar() {
-//        if (binding == null) return;
-//        String userId = sessionManager.getUserId();
-//
-//        File imageFile = new File(selectedImagePath);
-//        RequestBody requestFile = RequestBody.create(MediaType.parse("image/*"), imageFile);
-//        MultipartBody.Part body = MultipartBody.Part.createFormData("avatar", imageFile.getName(), requestFile);
-//
-//        binding.loadingIndicator.setVisibility(View.VISIBLE);
-//
-//        ApiClient.getClient().updateAvatar(sessionManager.getUserId(), body)
-//                .enqueue(new Callback<UserResponse>() {
-//                    @Override
-//                    public void onResponse(Call<UserResponse> call, Response<UserResponse> response) {
-//                        if (!isFragmentActive || binding == null) return;
-//
-//                        binding.loadingIndicator.setVisibility(View.GONE);
-//
-//                        if (response.isSuccessful() && response.body() != null) {
-//                            UserResponse apiResponse = response.body();
-//                            if (apiResponse.getStatus() == 1) {
-//                                sessionManager.saveAvatarPath(apiResponse.getAvatar());
-//                                Toasty.success(requireContext(), "Profile updated successfully").show();
-//                                Navigation.findNavController(requireView()).navigateUp();
-//                            } else {
-//                                Toasty.error(requireContext(), apiResponse.getMessage()).show();
-//                            }
-//                        }
-//                    }
-//
-//                    @Override
-//                    public void onFailure(Call<UserResponse> call, Throwable t) {
-//                        if (!isFragmentActive || binding == null) return;
-//
-//                        binding.loadingIndicator.setVisibility(View.GONE);
-//                        Toasty.error(requireContext(), "Failed to upload avatar: " + t.getMessage()).show();
-//                    }
-//                });
-//    }
-
     @Override
     public void onDestroyView() {
         super.onDestroyView();
@@ -562,3 +542,4 @@ public class EditProfileFragment extends Fragment {
         binding = null;
     }
 }
+

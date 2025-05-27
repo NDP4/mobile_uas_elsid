@@ -16,6 +16,8 @@ public class SessionManager {
     private static final String KEY_PROVINCE = "province";
     private static final String KEY_POSTAL_CODE = "postal_code";
     private static final String KEY_AVATAR = "avatar";
+    private static final String KEY_PROVINCE_ID = "province_id";
+    private static final String KEY_CITY_ID = "city_id";
 
 
     private SharedPreferences pref;
@@ -135,4 +137,27 @@ public class SessionManager {
         editor.putBoolean(KEY_IS_GUEST, false);
         editor.apply(); // menggunakan apply() untuk penyimpanan asynchronous
     }
+
+    public void updateProfile(String fullname, String phone, String address,
+                              String city, String province, String postalCode,
+                              String provinceId, String cityId) {
+        editor.putString(KEY_FULLNAME, fullname);
+        editor.putString(KEY_PHONE, phone);
+        editor.putString(KEY_ADDRESS, address);
+        editor.putString(KEY_CITY, city);
+        editor.putString(KEY_PROVINCE, province);
+        editor.putString(KEY_POSTAL_CODE, postalCode);
+        editor.putString(KEY_PROVINCE_ID, provinceId);
+        editor.putString(KEY_CITY_ID, cityId);
+        editor.commit();
+    }
+
+    public String getProvinceId() {
+        return pref.getString(KEY_PROVINCE_ID, "");
+    }
+
+    public String getCityId() {
+        return pref.getString(KEY_CITY_ID, "");
+    }
 }
+

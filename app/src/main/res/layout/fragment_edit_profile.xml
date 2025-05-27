@@ -52,11 +52,9 @@
                     app:shapeAppearanceOverlay="@style/CircleImageView"
                     app:strokeColor="@color/primary"
                     app:strokeWidth="2dp"/>
-
-
             </FrameLayout>
 
-            <!-- Form Fields -->
+            <!-- Form Fields Card -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -74,6 +72,7 @@
                     android:orientation="vertical"
                     android:padding="16dp">
 
+                    <!-- Basic Info Section -->
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/fullnameContainer"
                         style="@style/Widget.Material3.TextInputLayout.FilledBox"
@@ -81,10 +80,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="16dp"
                         android:hint="Full Name"
-                        app:boxBackgroundColor="@color/text_white"
-                        app:boxStrokeColor="@color/primary"
-                        app:startIconDrawable="@drawable/ic_person"
-                        app:errorEnabled="true">
+                        app:startIconDrawable="@drawable/ic_person">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/fullnameInput"
@@ -100,9 +96,6 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="16dp"
                         android:hint="Phone"
-                        app:boxStrokeColor="@color/primary"
-                        app:boxBackgroundColor="@color/text_white"
-                        app:errorEnabled="true"
                         app:startIconDrawable="@drawable/ic_phone">
 
                         <com.google.android.material.textfield.TextInputEditText
@@ -112,80 +105,70 @@
                             android:inputType="phone"/>
                     </com.google.android.material.textfield.TextInputLayout>
 
+                    <!-- Address Section -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Shipping Address"
+                        android:textStyle="bold"
+                        android:textSize="16sp"
+                        android:layout_marginBottom="8dp"/>
+
+                    <!-- Province Spinner -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                        app:startIconDrawable="@drawable/ic_province">
+
+                        <AutoCompleteTextView
+                            android:id="@+id/provinceSpinner"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="Select Province"
+                            android:inputType="none"/>
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- City Spinner -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                        app:startIconDrawable="@drawable/ic_city">
+
+                        <AutoCompleteTextView
+                            android:id="@+id/citySpinner"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="Select City"
+                            android:inputType="none"/>
+                    </com.google.android.material.textfield.TextInputLayout>
+
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/addressContainer"
                         style="@style/Widget.Material3.TextInputLayout.FilledBox"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="16dp"
-                        android:hint="Address"
-                        app:boxStrokeColor="@color/primary"
-                        app:errorEnabled="true"
-                        app:boxBackgroundColor="@color/text_white"
+                        android:hint="Detail Address"
                         app:startIconDrawable="@drawable/ic_location">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/addressInput"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:inputType="textPostalAddress"
+                            android:inputType="textMultiLine"
                             android:minLines="2"/>
                     </com.google.android.material.textfield.TextInputLayout>
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal">
-
-                        <com.google.android.material.textfield.TextInputLayout
-                            android:id="@+id/cityContainer"
-                            style="@style/Widget.Material3.TextInputLayout.FilledBox"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:layout_marginEnd="8dp"
-                            android:hint="City"
-                            app:boxStrokeColor="@color/primary"
-                            app:errorEnabled="true"
-                            app:boxBackgroundColor="@color/text_white"
-                            app:startIconDrawable="@drawable/ic_city">
-
-                            <com.google.android.material.textfield.TextInputEditText
-                                android:id="@+id/cityInput"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"/>
-                        </com.google.android.material.textfield.TextInputLayout>
-
-                        <com.google.android.material.textfield.TextInputLayout
-                            android:id="@+id/provinceContainer"
-                            style="@style/Widget.Material3.TextInputLayout.FilledBox"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:layout_marginStart="8dp"
-                            android:hint="Province"
-                            app:boxStrokeColor="@color/primary"
-                            app:errorEnabled="true"
-                            app:boxBackgroundColor="@color/text_white"
-                            app:startIconDrawable="@drawable/ic_province">
-
-                            <com.google.android.material.textfield.TextInputEditText
-                                android:id="@+id/provinceInput"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"/>
-                        </com.google.android.material.textfield.TextInputLayout>
-                    </LinearLayout>
 
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/postalCodeContainer"
                         style="@style/Widget.Material3.TextInputLayout.FilledBox"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
                         android:hint="Postal Code"
-                        app:boxStrokeColor="@color/primary"
-                        app:boxBackgroundColor="@color/text_white"
-                        app:errorEnabled="true"
                         app:startIconDrawable="@drawable/ic_postal">
 
                         <com.google.android.material.textfield.TextInputEditText
@@ -198,32 +181,30 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- Save Button -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/saveButton"
-                style="@style/Widget.Material3.Button.TextButton"
+                style="@style/Widget.Material3.Button"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="8dp"
                 android:layout_marginBottom="32dp"
                 android:text="SAVE CHANGES"
-                android:textAllCaps="false"
                 android:textSize="14sp"
                 app:cornerRadius="12dp"
                 app:icon="@drawable/ic_save"
                 app:iconGravity="textStart"
-                app:iconPadding="8dp"
-                app:iconTint="@color/text_white"/>
-
+                app:iconPadding="8dp"/>
         </LinearLayout>
     </ScrollView>
 
     <ProgressBar
         android:id="@+id/loadingIndicator"
-        style="@style/Widget.Material3.CircularProgressIndicator.Small"
+        style="@style/Widget.Material3.CircularProgressIndicator"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:visibility="gone"
-        app:indicatorColor="@color/primary"/>
+        android:visibility="gone"/>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
