@@ -132,10 +132,28 @@ public class SessionManager {
 
 
     public void logout() {
+        // Store temporary shipping data
+        String tempProvinceId = getProvinceId();
+        String tempCityId = getCityId();
+        String tempProvince = getProvince();
+        String tempCity = getCity();
+        String tempPostalCode = getPostalCode();
+        String tempAddress = getAddress();
+
+        // Clear all session data
         editor.clear();
-//        editor.commit();
+        
+        // Restore shipping data
+        editor.putString(KEY_PROVINCE_ID, tempProvinceId);
+        editor.putString(KEY_CITY_ID, tempCityId);
+        editor.putString(KEY_PROVINCE, tempProvince);
+        editor.putString(KEY_CITY, tempCity);
+        editor.putString(KEY_POSTAL_CODE, tempPostalCode);
+        editor.putString(KEY_ADDRESS, tempAddress);
+        
+        // Set guest mode to false and commit changes
         editor.putBoolean(KEY_IS_GUEST, false);
-        editor.apply(); // menggunakan apply() untuk penyimpanan asynchronous
+        editor.commit();
     }
 
     public void updateProfile(String fullname, String phone, String address,
@@ -160,4 +178,3 @@ public class SessionManager {
         return pref.getString(KEY_CITY_ID, "");
     }
 }
-

@@ -41,6 +41,11 @@ public class OrderDetailFragment extends Fragment {
         binding = FragmentOrderDetailBinding.inflate(inflater, container, false);
         sessionManager = new SessionManager(requireContext());
 
+        // Setup back button
+        binding.backButton.setOnClickListener(v -> {
+            Navigation.findNavController(v).popBackStack();
+        });
+
         // Get order ID from arguments
         orderId = getArguments().getInt("order_id", -1);
         if (orderId == -1) {

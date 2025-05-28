@@ -75,7 +75,7 @@
                     <!-- Basic Info Section -->
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/fullnameContainer"
-                        style="@style/Widget.Material3.TextInputLayout.FilledBox"
+                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="16dp"
@@ -91,7 +91,7 @@
 
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/phoneContainer"
-                        style="@style/Widget.Material3.TextInputLayout.FilledBox"
+                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="16dp"
@@ -106,13 +106,13 @@
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <!-- Address Section -->
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Shipping Address"
-                        android:textStyle="bold"
-                        android:textSize="16sp"
-                        android:layout_marginBottom="8dp"/>
+<!--                    <TextView-->
+<!--                        android:layout_width="wrap_content"-->
+<!--                        android:layout_height="wrap_content"-->
+<!--                        android:text="Shipping Address"-->
+<!--                        android:textStyle="bold"-->
+<!--                        android:textSize="16sp"-->
+<!--                        android:layout_marginBottom="8dp"/>-->
 
                     <!-- Province Spinner -->
                     <com.google.android.material.textfield.TextInputLayout
@@ -148,7 +148,7 @@
 
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/addressContainer"
-                        style="@style/Widget.Material3.TextInputLayout.FilledBox"
+                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="16dp"
@@ -165,7 +165,7 @@
 
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/postalCodeContainer"
-                        style="@style/Widget.Material3.TextInputLayout.FilledBox"
+                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="Postal Code"
@@ -184,7 +184,7 @@
             <!-- Save Button -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/saveButton"
-                style="@style/Widget.Material3.Button"
+                style="@style/Widget.Material3.Button.OutlinedButton"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="8dp"

@@ -364,6 +364,7 @@ public class ProductDetailFragment extends Fragment {
         binding.categoryText.setClickable(true);
         binding.descriptionText.setText(product.getDescription());
         binding.viewCountText.setText(String.format("%d views", product.getViewCount()));
+        binding.weightText.setText(String.format("%d gram", product.getWeight()));
 
         // Setup category chip click functionality
         setupCategoryChip();

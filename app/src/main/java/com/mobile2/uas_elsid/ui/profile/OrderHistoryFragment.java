@@ -146,8 +146,8 @@ public class OrderHistoryFragment extends Fragment implements OrderHistoryAdapte
                             List<Order> orders = response.body().getOrders();
 
                             if (orders != null && !orders.isEmpty()) {
-                                // Sort orders by date (newest first)
-                                Collections.reverse(orders);
+                                // Sort orders by ID in descending order (newest first)
+                                Collections.sort(orders, (o1, o2) -> Integer.compare(o2.getId(), o1.getId()));
 
                                 adapter.setOrders(orders);
                                 binding.recyclerView.setVisibility(View.VISIBLE);

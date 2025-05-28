@@ -60,6 +60,7 @@ public class DetailPesananFragment extends Fragment {
     private CartManager cartManager;
     private SessionManager sessionManager;
     private DetailPesananAdapter adapter;
+    private CourierAdapter courierAdapter;
     private int totalWeight = 0;
     private int shippingCost = 0;
     private static final String ORIGIN_CITY = "501";
@@ -72,15 +73,26 @@ public class DetailPesananFragment extends Fragment {
         cartManager = CartManager.getInstance(requireContext());
         sessionManager = new SessionManager(requireContext());
 
+        // tombol back
+        binding.backButton.setOnClickListener(v ->
+            Navigation.findNavController(v).popBackStack());
+
+        // Setup views
         setupRecyclerView();
-        loadCartItems();
         setupCouponInput();
         setupCheckoutButton();
         setupAddressSection();
 
+        // Load data
+        loadCartItems();
+
+        // Setup back button
+        binding.backButton.setOnClickListener(v ->
+            Navigation.findNavController(v).popBackStack());
+
         return binding.getRoot();
     }
-    // rajaongkir
+
     private void setupAddressSection() {
         String address = sessionManager.getAddress();
         String city = sessionManager.getCity();
@@ -90,17 +102,21 @@ public class DetailPesananFragment extends Fragment {
         String fullAddress = String.format("%s\n%s, %s %s",
                 address, city, province, postalCode);
         binding.addressText.setText(fullAddress);
-
-        binding.changeAddressButton.setOnClickListener(v -> {
-            // Show address selection dialog
-            showAddressSelectionDialog();
-        });
     }
 
     private void setupRecyclerView() {
+        // Setup order items recycler view
         adapter = new DetailPesananAdapter(requireContext());
         binding.orderItemsRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.orderItemsRecyclerView.setAdapter(adapter);
+
+        // Setup courier recycler view
+        courierAdapter = new CourierAdapter(requireContext(), cost -> {
+            shippingCost = cost.cost.get(0).value;
+            calculateTotals();
+        });
+        binding.courierRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        binding.courierRecyclerView.setAdapter(courierAdapter);
     }
 
     private void loadCartItems() {
@@ -109,11 +125,71 @@ public class DetailPesananFragment extends Fragment {
             public void onSuccess(List<CartItem> items) {
                 adapter.setItems(items);
                 calculateTotals();
+
+                // Calculate total weight and load shipping options
+                totalWeight = calculateTotalWeight();
+                loadShippingOptions();
             }
 
             @Override
             public void onError(String message) {
                 Toasty.error(requireContext(), message).show();
+            }
+        });
+    }
+
+    private void loadShippingOptions() {
+        // Check if address is set
+        if (sessionManager.getAddress() == null || sessionManager.getCity() == null ||
+                sessionManager.getProvince() == null || sessionManager.getPostalCode() == null) {
+            new AlertDialog.Builder(requireContext())
+                    .setTitle("Address Required")
+                    .setMessage("Please set your delivery address in your profile first")
+                    .setPositiveButton("Go to Profile", (dialog, which) -> {
+                        Navigation.findNavController(requireView()).navigate(R.id.navigation_edit_profile);
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
+            return;
+        }
+
+        String cityId = sessionManager.getCityId();
+        if (cityId == null || cityId.isEmpty()) {
+            Toasty.error(requireContext(), "City ID not found. Please update your profile").show();
+            return;
+        }
+
+        // Load shipping costs for all couriers
+        String[] couriers = {"jne", "pos", "tiki"};
+        for (String courier : couriers) {
+            loadShippingCosts(courier, courierAdapter);
+        }
+    }
+
+    private void loadShippingCosts(String courier, CourierAdapter adapter) {
+        Map<String, Object> request = new HashMap<>();
+        request.put("origin", ORIGIN_CITY);
+        request.put("destination", sessionManager.getCityId());
+        request.put("weight", totalWeight);
+        request.put("courier", courier);
+
+        ApiClient.getClient().calculateShipping(request).enqueue(new Callback<ShippingCostResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<ShippingCostResponse> call, @NonNull Response<ShippingCostResponse> response) {
+                if (response.isSuccessful() && response.body() != null
+                        && response.body().rajaongkir != null
+                        && !response.body().rajaongkir.results.isEmpty()) {
+
+                    List<ShippingCostResponse.Cost> newCosts = response.body().rajaongkir.results.get(0).costs;
+                    List<ShippingCostResponse.Cost> currentCosts = new ArrayList<>(adapter.getCosts());
+                    currentCosts.addAll(newCosts);
+                    adapter.setCosts(currentCosts);
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ShippingCostResponse> call, @NonNull Throwable t) {
+                Toasty.error(requireContext(), "Failed to load shipping cost for " + courier).show();
             }
         });
     }
@@ -199,19 +275,11 @@ public class DetailPesananFragment extends Fragment {
         return subtotal;
     }
 
-
     private void calculateTotals() {
-        // Hitung subtotal sekali saja
         int subtotal = calculateSubtotal();
         int discount = 0;
-        totalWeight = 0;
 
-        // Hitung total berat untuk shipping
-        for (CartItem item : adapter.getItems()) {
-            totalWeight += item.getProduct().getWeight() * item.getQuantity();
-        }
-
-        // Hitung diskon jika ada coupon aktif
+        // Calculate discount if coupon is active
         if (activeCoupon != null) {
             if ("percentage".equals(activeCoupon.getDiscountType())) {
                 discount = (int) (subtotal * (activeCoupon.getDiscountAmount() / 100.0));
@@ -224,21 +292,15 @@ public class DetailPesananFragment extends Fragment {
             binding.discountContainer.setVisibility(View.GONE);
         }
 
-        // Hitung total
         int total = subtotal + shippingCost - discount;
 
-        // Update UI
+        // Update summary views
         binding.subtotalText.setText(formatPrice(subtotal));
         binding.shippingText.setText(formatPrice(shippingCost));
         binding.totalText.setText(formatPrice(total));
         binding.bottomTotalText.setText(formatPrice(total));
     }
 
-    // Method terpisah untuk menghitung harga per item
-    private int calculatePrice(int basePrice, int discount, int quantity) {
-        int discountedPrice = basePrice - (basePrice * discount / 100);
-        return discountedPrice * quantity;
-    }
     private void calculateShipping(String origin, String destination, int weight, String courier) {
         Map<String, Object> request = new HashMap<>();
         request.put("origin", origin);
@@ -277,18 +339,19 @@ public class DetailPesananFragment extends Fragment {
         String formatted = rupiahFormat.format(price);
         return formatted.substring(0, formatted.length() - 3); // Remove ",00"
     }
+
     private void showAddressSelectionDialog() {
         // Check if user has set their address
         if (sessionManager.getAddress() == null || sessionManager.getCity() == null ||
                 sessionManager.getProvince() == null || sessionManager.getPostalCode() == null) {
             new AlertDialog.Builder(requireContext())
-                .setTitle("Address Required")
-                .setMessage("Please set your delivery address in your profile first")
-                .setPositiveButton("Go to Profile", (dialog, which) -> {
-                    Navigation.findNavController(requireView()).navigate(R.id.navigation_edit_profile);
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
+                    .setTitle("Address Required")
+                    .setMessage("Please set your delivery address in your profile first")
+                    .setPositiveButton("Go to Profile", (dialog, which) -> {
+                        Navigation.findNavController(requireView()).navigate(R.id.navigation_edit_profile);
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
             return;
         }
 
@@ -352,7 +415,6 @@ public class DetailPesananFragment extends Fragment {
         dialog.show();
     }
 
-
     private void setupCheckoutButton() {
         binding.checkoutButton.setOnClickListener(v -> {
             // Validate address
@@ -372,10 +434,9 @@ public class DetailPesananFragment extends Fragment {
         });
     }
 
-
     private void handleCheckout() {
-        String totaltext = binding.totalText.getText().toString();
-        String numericTotal = totaltext.replaceAll("[^0-9]", "");
+        String totalText = binding.totalText.getText().toString();
+        String numericTotal = totalText.replaceAll("[^0-9]", "");
         int totalAmount = Integer.parseInt(numericTotal);
 
         // Calculate discount amount
@@ -388,7 +449,19 @@ public class DetailPesananFragment extends Fragment {
             }
         }
 
+        // Get selected courier info
+        ShippingCostResponse.Cost selectedCourier = courierAdapter.getSelectedCourier();
+        if (selectedCourier == null) {
+            Toasty.warning(requireContext(), "Please select a courier service").show();
+            return;
+        }
+
+        String courierCode = selectedCourier.service.toLowerCase();
+        String[] serviceParts = selectedCourier.service.split(" ");
+
         Map<String, Object> orderData = new HashMap<>();
+        orderData.put("courier", serviceParts[0].toLowerCase()); // e.g., "jne", "tiki", "pos"
+        orderData.put("courier_service", selectedCourier.service); // full service name
         orderData.put("user_id", sessionManager.getUserId());
         orderData.put("shipping_address", sessionManager.getAddress());
         orderData.put("shipping_city", sessionManager.getCity());
@@ -396,16 +469,15 @@ public class DetailPesananFragment extends Fragment {
         orderData.put("shipping_postal_code", sessionManager.getPostalCode());
         orderData.put("shipping_cost", shippingCost);
         orderData.put("total_amount", totalAmount);
-        orderData.put("courier", "jne");
-        orderData.put("courier_service", "reg");
 
         // Add discount information
         if (activeCoupon != null) {
             orderData.put("coupon_code", activeCoupon.getCode());
             orderData.put("discount_amount", discountAmount);
-            orderData.put("subtotal", calculateSubtotal()); // Add subtotal for proper calculation
+            orderData.put("subtotal", calculateSubtotal());
         }
 
+        // Add items to order
         List<Map<String, Object>> itemsList = new ArrayList<>();
         for (CartItem item : adapter.getItems()) {
             Map<String, Object> itemMap = new HashMap<>();
@@ -479,9 +551,23 @@ public class DetailPesananFragment extends Fragment {
         });
     }
 
+    private int calculatePrice(int basePrice, int discount, int quantity) {
+        int discountedPrice = basePrice - (basePrice * discount / 100);
+        return discountedPrice * quantity;
+    }
+
+    private int calculateTotalWeight() {
+        int totalWeight = 0;
+        for (CartItem item : adapter.getItems()) {
+            totalWeight += item.getProduct().getWeight() * item.getQuantity();
+        }
+        return Math.max(totalWeight, 1000); // Minimum 1kg
+    }
+
     @Override
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;
     }
 }
+
