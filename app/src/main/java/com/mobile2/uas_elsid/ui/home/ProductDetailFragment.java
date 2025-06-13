@@ -553,37 +553,6 @@ public class ProductDetailFragment extends Fragment {
 
     private void setupAddToCart() {
         binding.addToCartButton.setOnClickListener(v -> {
-//            if (!sessionManager.isLoggedIn()) {
-//                Toasty.warning(requireContext(), "Please login to add items to cart").show();
-//                return;
-//            }
-            if (!sessionManager.isLoggedIn()) {
-                View dialogView = getLayoutInflater().inflate(R.layout.layout_login_required_dialog, null);
-                TextView messageText = dialogView.findViewById(R.id.loginMessageText);
-                messageText.setText("Please login to add items to cart");
-
-                AlertDialog dialog = new AlertDialog.Builder(requireContext())
-                        .setView(dialogView)
-                        .setCancelable(false)
-                        .create();
-
-                // Set transparent background for rounded corners
-                dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
-
-                // Setup button clicks
-                dialogView.findViewById(R.id.loginButton).setOnClickListener(view -> {
-                    dialog.dismiss();
-                    startActivity(new Intent(requireActivity(), LoginActivity.class));
-                });
-
-                dialogView.findViewById(R.id.cancelButton).setOnClickListener(button -> {
-                    dialog.dismiss();
-                });
-
-                dialog.show();
-                return;
-            }
-
             if (currentProduct == null) {
                 Toasty.error(requireContext(), "Product not found").show();
                 return;
@@ -598,7 +567,7 @@ public class ProductDetailFragment extends Fragment {
             // Create cart item
             CartItem cartItem = new CartItem(currentProduct, selectedVariant, 1);
 
-            // Add to cart
+            // Add to cart using CartManager (will handle both guest and logged-in users)
             CartManager.getInstance(requireContext()).addToCart(cartItem, new CartManager.CartCallback() {
                 @Override
                 public void onSuccess(List<CartItem> items) {

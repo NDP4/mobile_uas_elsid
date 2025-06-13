@@ -144,7 +144,10 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder> {
         // Disable button to prevent multiple clicks
         holder.removeButton.setEnabled(false);
 
-        CartManager.getInstance(context).removeFromCart(item.getId(), new CartManager.CartCallback() {
+        // Use product ID for guest mode, cart item ID for logged in users
+        int itemId = item.getId() > 0 ? item.getId() : item.getProduct().getId();
+
+        CartManager.getInstance(context).removeFromCart(itemId, new CartManager.CartCallback() {
             @Override
             public void onSuccess(List<CartItem> items) {
                 try {

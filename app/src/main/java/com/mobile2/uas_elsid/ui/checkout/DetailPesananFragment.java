@@ -1,5 +1,6 @@
 package com.mobile2.uas_elsid.ui.checkout;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -10,6 +11,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -20,6 +22,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.gson.Gson;
+import com.mobile2.uas_elsid.LoginActivity;
 import com.mobile2.uas_elsid.R;
 import com.mobile2.uas_elsid.adapter.CourierAdapter;
 import com.mobile2.uas_elsid.adapter.DetailPesananAdapter;
@@ -489,6 +492,33 @@ public class DetailPesananFragment extends Fragment {
 
     private void setupCheckoutButton() {
         binding.checkoutButton.setOnClickListener(v -> {
+            if (!sessionManager.isLoggedIn()) {
+                View dialogView = getLayoutInflater().inflate(R.layout.layout_login_required_dialog, null);
+                TextView messageText = dialogView.findViewById(R.id.loginMessageText);
+                messageText.setText("Please login to complete your purchase");
+
+                AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                        .setView(dialogView)
+                        .setCancelable(false)
+                        .create();
+
+                // Set transparent background for rounded corners
+                dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+
+                // Setup button clicks
+                dialogView.findViewById(R.id.loginButton).setOnClickListener(view -> {
+                    dialog.dismiss();
+                    startActivity(new Intent(requireActivity(), LoginActivity.class));
+                });
+
+                dialogView.findViewById(R.id.cancelButton).setOnClickListener(button -> {
+                    dialog.dismiss();
+                });
+
+                dialog.show();
+                return;
+            }
+
             // Validate address
             if (sessionManager.getAddress() == null || sessionManager.getCity() == null ||
                     sessionManager.getProvince() == null || sessionManager.getPostalCode() == null) {

@@ -41,61 +41,15 @@ public class CheckoutFragment extends Fragment implements CartAdapter.CartItemLi
         binding = FragmentCheckoutBinding.inflate(inflater, container, false);
         sessionManager = new SessionManager(requireContext());
 
-        // Check login status first before setting up the view
-        checkLoginStatus();
-
-        if (sessionManager.isLoggedIn()) {
-            setupRecyclerView();
-
-            setupCheckoutButton();
-            updateEmptyState();
-        } else {
-            showLoginRequired();
-        }
+        setupRecyclerView();
+        setupCheckoutButton();
+        updateEmptyState();
 
         return binding.getRoot();
     }
 
-    private void checkLoginStatus() {
-        if (!sessionManager.isLoggedIn()) {
-            View dialogView = getLayoutInflater().inflate(R.layout.layout_login_required_dialog, null);
-            TextView messageText = dialogView.findViewById(R.id.loginMessageText);
-            messageText.setText("Please login to view your checkout");
-            AlertDialog dialog = new AlertDialog.Builder(requireContext())
-                    .setView(dialogView)
-                    .setCancelable(false)
-                    .create();
-
-            // Set transparent background for rounded corners
-            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
-
-            // Setup button clicks
-            dialogView.findViewById(R.id.loginButton).setOnClickListener(v -> {
-                dialog.dismiss();
-                startActivity(new Intent(requireActivity(), LoginActivity.class));
-                requireActivity().finish();
-            });
-
-            dialogView.findViewById(R.id.cancelButton).setOnClickListener(v -> {
-                dialog.dismiss();
-                requireActivity().onBackPressed();
-            });
-
-            dialog.show();
-        }
-    }
-
-    private void showLoginRequired() {
-        binding.recyclerViewCart.setVisibility(View.GONE);
-        binding.emptyStateView.setVisibility(View.GONE);
-        binding.loginRequiredView.setVisibility(View.VISIBLE);
-        binding.subtotalLayout.setVisibility(View.GONE);
-        binding.checkoutButton.setVisibility(View.GONE);
-    }
-
     private void setupRecyclerView() {
-        String userId = sessionManager.getUserId();
-        cartAdapter = new CartAdapter(requireContext(), this, userId);
+        cartAdapter = new CartAdapter(requireContext(), this, null);
         binding.recyclerViewCart.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.recyclerViewCart.setAdapter(cartAdapter);
         binding.loginRequiredView.setVisibility(View.GONE);
@@ -165,13 +119,37 @@ public class CheckoutFragment extends Fragment implements CartAdapter.CartItemLi
     }
     private void setupCheckoutButton() {
         binding.checkoutButton.setOnClickListener(v -> {
+            if (!sessionManager.isLoggedIn()) {
+                View dialogView = getLayoutInflater().inflate(R.layout.layout_login_required_dialog, null);
+                TextView messageText = dialogView.findViewById(R.id.loginMessageText);
+                messageText.setText("Please login to complete your purchase");
+
+                AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                        .setView(dialogView)
+                        .setCancelable(false)
+                        .create();
+
+                dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+
+                dialogView.findViewById(R.id.loginButton).setOnClickListener(view -> {
+                    dialog.dismiss();
+                    startActivity(new Intent(requireActivity(), LoginActivity.class));
+                });
+
+                dialogView.findViewById(R.id.cancelButton).setOnClickListener(button -> {
+                    dialog.dismiss();
+                });
+
+                dialog.show();
+                return;
+            }
+
             NavHostFragment navHostFragment = (NavHostFragment) requireActivity()
                     .getSupportFragmentManager()
                     .findFragmentById(R.id.nav_host_fragment_activity_home);
 
             if (navHostFragment != null) {
                 NavController navController = navHostFragment.getNavController();
-                // Navigate to detail pesanan fragment
                 navController.navigate(R.id.action_navigation_checkout_to_navigation_detail_pesanan);
             }
         });

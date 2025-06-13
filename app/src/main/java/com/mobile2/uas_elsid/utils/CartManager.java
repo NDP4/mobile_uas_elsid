@@ -62,6 +62,46 @@ public class CartManager {
 
     // Update addToCart method
     public void addToCart(CartItem item, CartCallback callback) {
+        if (isGuestMode()) {
+            SharedPreferences prefs = context.getSharedPreferences(GUEST_CART_PREFS, Context.MODE_PRIVATE);
+            String cartJson = prefs.getString(GUEST_CART_ITEMS, "");
+            List<CartItem> guestCart;
+            
+            try {
+                Type type = new TypeToken<List<CartItem>>(){}.getType();
+                guestCart = new Gson().fromJson(cartJson, type);
+                if (guestCart == null) {
+                    guestCart = new ArrayList<>();
+                }
+                
+                // Check for existing item
+                boolean itemFound = false;
+                for (CartItem existingItem : guestCart) {
+                    if (isSameProduct(existingItem, item)) {
+                        // Update quantity instead of adding new item
+                        existingItem.setQuantity(existingItem.getQuantity() + item.getQuantity());
+                        itemFound = true;
+                        break;
+                    }
+                }
+                
+                // Add new item if not found
+                if (!itemFound) {
+                    guestCart.add(item);
+                }
+                
+                // Save updated cart
+                String updatedJson = new Gson().toJson(guestCart);
+                prefs.edit().putString(GUEST_CART_ITEMS, updatedJson).apply();
+                
+                callback.onSuccess(guestCart);
+            } catch (Exception e) {
+                callback.onError("Error adding item to guest cart");
+            }
+            return;
+        }
+
+        // Handle logged in user cart
         String userId = sessionManager.getUserId();
         if (userId == null || userId.isEmpty()) {
             callback.onError("User not logged in");
@@ -95,6 +135,19 @@ public class CartManager {
                 callback.onError("Network error: " + t.getMessage());
             }
         });
+    }
+
+    private boolean isSameProduct(CartItem item1, CartItem item2) {
+        // Check if products are the same
+        boolean sameProduct = item1.getProduct().getId() == item2.getProduct().getId();
+        
+        // If variants exist, check if they match
+        if (item1.getVariant() != null && item2.getVariant() != null) {
+            return sameProduct && item1.getVariant().getId() == item2.getVariant().getId();
+        }
+        
+        // If no variants, just check product ID
+        return sameProduct;
     }
 
     // Update getCartItems method
@@ -173,6 +226,36 @@ public class CartManager {
         }
     }
     public void removeFromCart(int cartItemId, CartCallback callback) {
+        if (isGuestMode()) {
+            SharedPreferences prefs = context.getSharedPreferences(GUEST_CART_PREFS, Context.MODE_PRIVATE);
+            String cartJson = prefs.getString(GUEST_CART_ITEMS, "");
+            
+            try {
+                Type type = new TypeToken<List<CartItem>>(){}.getType();
+                List<CartItem> guestCart = new Gson().fromJson(cartJson, type);
+                
+                if (guestCart != null) {
+                    // Find and remove specific item
+                    boolean removed = guestCart.removeIf(item -> 
+                        item.getProduct().getId() == cartItemId || item.getId() == cartItemId);
+                    
+                    if (removed) {
+                        // Save updated cart
+                        String updatedJson = new Gson().toJson(guestCart);
+                        prefs.edit().putString(GUEST_CART_ITEMS, updatedJson).apply();
+                        callback.onSuccess(guestCart);
+                    } else {
+                        callback.onError("Item not found in cart");
+                    }
+                } else {
+                    callback.onError("Cart is empty");
+                }
+            } catch (Exception e) {
+                callback.onError("Error removing item from guest cart");
+            }
+            return;
+        }
+
         apiService.removeCartItem(cartItemId).enqueue(new Callback<CartResponse>() {
             @Override
             public void onResponse(Call<CartResponse> call, Response<CartResponse> response) {
@@ -196,6 +279,13 @@ public class CartManager {
         });
     }
     public void clearCart(CartCallback callback) {
+        if (isGuestMode()) {
+            SharedPreferences prefs = context.getSharedPreferences(GUEST_CART_PREFS, Context.MODE_PRIVATE);
+            prefs.edit().remove(GUEST_CART_ITEMS).apply();
+            callback.onSuccess(new ArrayList<>());
+            return;
+        }
+
         if (!sessionManager.isLoggedIn()) {
             callback.onError("User not logged in");
             return;
