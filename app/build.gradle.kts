@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
+
 }
 
 android {
@@ -77,6 +78,10 @@ dependencies {
 
     implementation("com.squareup.okhttp3:logging-interceptor:4.9.0")
     implementation("com.google.android.gms:play-services-location:21.0.1")
+
+    // font
+//    implementation("com.google.android.gms:play-services-fonts:17.0.0")
+    implementation("androidx.core:core:1.10.1")
 
 
 }

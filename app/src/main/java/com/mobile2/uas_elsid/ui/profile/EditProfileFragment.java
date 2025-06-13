@@ -120,19 +120,12 @@ public class EditProfileFragment extends Fragment {
             return;
         }
 
-        // Get selected province and city from spinners
-        String selectedProvince = binding.provinceSpinner.getText().toString();
-        String selectedCity = binding.citySpinner.getText().toString();
-
         // Create request map
         Map<String, String> updateData = new HashMap<>();
         updateData.put("email", email);
         updateData.put("fullname", binding.fullnameInput.getText().toString().trim());
         updateData.put("phone", binding.phoneInput.getText().toString().trim());
         updateData.put("address", binding.addressInput.getText().toString().trim());
-        updateData.put("city", selectedCity);
-        updateData.put("province", selectedProvince);
-        updateData.put("postal_code", binding.postalCodeInput.getText().toString().trim());
 
         // Show loading
         binding.loadingIndicator.setVisibility(View.VISIBLE);

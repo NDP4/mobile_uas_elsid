@@ -3,6 +3,8 @@ package com.mobile2.uas_elsid.api;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import java.util.concurrent.TimeUnit;
+
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
@@ -22,10 +24,15 @@ public class ApiClient {
             HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor(message ->
                     System.out.println("API Log: " + message));
             loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+
             HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
             interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+            // Add timeouts
             OkHttpClient client = new OkHttpClient.Builder()
-                    .addInterceptor(interceptor)
+                    .addInterceptor(loggingInterceptor)
+                    .connectTimeout(60, TimeUnit.SECONDS)
+                    .readTimeout(60, TimeUnit.SECONDS)
+                    .writeTimeout(60, TimeUnit.SECONDS)
                     .build();
 
             retrofit = new Retrofit.Builder()

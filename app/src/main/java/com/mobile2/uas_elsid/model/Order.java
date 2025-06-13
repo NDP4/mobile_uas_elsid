@@ -61,6 +61,15 @@ public class Order {
     @SerializedName("coupon_usage")
     private CouponUsage couponUsage;
 
+    @SerializedName("payment_type")
+    private String paymentType;
+
+    @SerializedName("estimated_days")
+    private int estimatedDays;
+
+    @SerializedName("payment_method")
+    private String paymentMethod;
+
     // Getters
     public int getId() { return id; }
     public String getUserId() { return userId; }
@@ -92,6 +101,9 @@ public class Order {
     public CouponUsage getCouponUsage() {
         return couponUsage;
     }
+    public String getPaymentType() { return paymentType; }
+    public int getEstimatedDays() { return estimatedDays; }
+    public String getPaymentMethod() { return paymentMethod; }
 
     public static class CouponUsage {
         @SerializedName("discount_amount")

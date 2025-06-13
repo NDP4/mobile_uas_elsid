@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -14,10 +15,23 @@ import androidx.navigation.Navigation;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.textfield.TextInputEditText;
 import com.mobile2.uas_elsid.LoginActivity;
 import com.mobile2.uas_elsid.R;
+import com.mobile2.uas_elsid.api.ApiClient;
+import com.mobile2.uas_elsid.api.response.UserResponse;
 import com.mobile2.uas_elsid.databinding.FragmentProfileBinding;
 import com.mobile2.uas_elsid.utils.SessionManager;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+import es.dmoral.toasty.Toasty;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class ProfileFragment extends Fragment {
 
@@ -123,6 +137,9 @@ public class ProfileFragment extends Fragment {
         binding.aboutButton.setOnClickListener(v ->
                 Navigation.findNavController(v).navigate(R.id.navigation_about)
         );
+
+        binding.changePasswordButton.setOnClickListener(v -> showChangePasswordDialog());
+
         binding.orderHistoryButton.setOnClickListener(v ->
                 Navigation.findNavController(v).navigate(R.id.navigation_order_history)
         );
@@ -133,6 +150,93 @@ public class ProfileFragment extends Fragment {
             requireActivity().finish();
         });
     }
+
+    private void showChangePasswordDialog() {
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_change_password, null);
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                .setView(dialogView)
+                .create();
+
+        TextInputEditText oldPasswordInput = dialogView.findViewById(R.id.oldPasswordInput);
+        TextInputEditText newPasswordInput = dialogView.findViewById(R.id.newPasswordInput);
+        TextInputEditText confirmPasswordInput = dialogView.findViewById(R.id.confirmPasswordInput);
+        MaterialButton changeButton = dialogView.findViewById(R.id.changePasswordButton);
+        MaterialButton cancelButton = dialogView.findViewById(R.id.cancelButton);
+        ProgressBar progressBar = dialogView.findViewById(R.id.progressBar);
+
+        changeButton.setOnClickListener(v -> {
+            String oldPassword = oldPasswordInput.getText().toString().trim();
+            String newPassword = newPasswordInput.getText().toString().trim();
+            String confirmPassword = confirmPasswordInput.getText().toString().trim();
+
+            // Validasi input
+            if (oldPassword.isEmpty() || newPassword.isEmpty() || confirmPassword.isEmpty()) {
+                Toasty.error(requireContext(), "Please fill all fields").show();
+                return;
+            }
+
+            if (!newPassword.equals(confirmPassword)) {
+                Toasty.error(requireContext(), "New passwords don't match").show();
+                return;
+            }
+
+            // Set loading state
+            progressBar.setVisibility(View.VISIBLE);
+            changeButton.setEnabled(false);
+
+            // Buat request 
+            Map<String, Object> request = new HashMap<>();
+            request.put("user_id", sessionManager.getUserId());
+            request.put("old_password", oldPassword);
+            request.put("new_password", newPassword); 
+            request.put("confirm_password", confirmPassword);
+
+            // Panggil API
+            ApiClient.getClient().changePassword(request).enqueue(new Callback<UserResponse>() {
+                @Override
+                public void onResponse(@NonNull Call<UserResponse> call, @NonNull Response<UserResponse> response) {
+                    progressBar.setVisibility(View.GONE);
+                    changeButton.setEnabled(true);
+
+                    if (response.isSuccessful() && response.body() != null) {
+                        UserResponse apiResponse = response.body();
+                        if (apiResponse.getStatus() == 1) {
+                            dialog.dismiss();
+                            Toasty.success(requireContext(), apiResponse.getMessage()).show();
+                            
+                            // Logout user after successful password change
+                            sessionManager.logout();
+                            startActivity(new Intent(requireActivity(), LoginActivity.class));
+                            requireActivity().finish();
+                        } else {
+                            Toasty.error(requireContext(), apiResponse.getMessage()).show();
+                        }
+                    } else {
+                        try {
+                            String errorBody = response.errorBody() != null ? 
+                                    response.errorBody().string() : "Unknown error";
+                            Toasty.error(requireContext(), errorBody).show();
+                        } catch (IOException e) {
+                            Toasty.error(requireContext(), "Network error").show();
+                        }
+                    }
+                }
+
+                @Override
+                public void onFailure(@NonNull Call<UserResponse> call, @NonNull Throwable t) {
+                    progressBar.setVisibility(View.GONE);
+                    changeButton.setEnabled(true);
+                    Toasty.error(requireContext(), "Network error: " + t.getMessage()).show();
+                }
+            });
+        });
+
+        cancelButton.setOnClickListener(v -> dialog.dismiss());
+
+        // Show dialog
+        dialog.show();
+    }
+
     public void refreshAvatar() {
         String avatarPath = sessionManager.getAvatarPath();
         if (avatarPath != null && !avatarPath.isEmpty()) {

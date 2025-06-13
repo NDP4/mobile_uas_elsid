@@ -4,6 +4,7 @@
     <color name="primary">#FF8300</color>
     <color name="primary_light">#FFB156</color>
     <color name="primary_dark">#CC6900</color>
+    <color name="white">#FFFFFF</color>
 
     <!-- Accent colors -->
     <color name="secondary">#2D3142</color>

@@ -1,3 +1,4 @@
+
 package com.mobile2.uas_elsid.model;
 
 import com.google.gson.annotations.SerializedName;
@@ -14,6 +15,12 @@ public class Coupon {
 
     @SerializedName("discount_amount")
     private double discountAmount;
+
+    private int discountPercent;
+
+    public int getDiscountPercent() {
+        return discountPercent;
+    }
 
     @SerializedName("discount_type")
     private String discountType;

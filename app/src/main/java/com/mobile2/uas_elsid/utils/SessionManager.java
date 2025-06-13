@@ -177,4 +177,29 @@ public class SessionManager {
     public String getCityId() {
         return pref.getString(KEY_CITY_ID, "");
     }
+
+    public void setProvince(String province) {
+        editor.putString(KEY_PROVINCE, province);
+        editor.commit();
+    }
+
+    public void setCity(String city) {
+        editor.putString(KEY_CITY, city);
+        editor.commit();
+    }
+
+    public void setCityId(String cityId) {
+        editor.putString(KEY_CITY_ID, cityId);
+        editor.commit();
+    }
+
+    public void setAddress(String address) {
+        editor.putString(KEY_ADDRESS, address);
+        editor.commit();
+    }
+
+    public void setPostalCode(String postalCode) {
+        editor.putString(KEY_POSTAL_CODE, postalCode);
+        editor.commit();
+    }
 }

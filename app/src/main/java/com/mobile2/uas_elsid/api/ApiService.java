@@ -4,8 +4,10 @@ import com.mobile2.uas_elsid.api.response.BannerResponse;
 import com.mobile2.uas_elsid.api.response.CartResponse;
 import com.mobile2.uas_elsid.api.response.CityResponse;
 import com.mobile2.uas_elsid.api.response.CouponResponse;
+import com.mobile2.uas_elsid.api.response.CourierResponse;
 import com.mobile2.uas_elsid.api.response.OrderResponse;
 import com.mobile2.uas_elsid.api.response.PaymentResponse;
+import com.mobile2.uas_elsid.api.response.PaymentStatusResponse;
 import com.mobile2.uas_elsid.api.response.ProductDetailResponse;
 import com.mobile2.uas_elsid.api.response.ProductResponse;
 import com.mobile2.uas_elsid.api.response.ProvinceResponse;
@@ -102,6 +104,8 @@ public interface ApiService {
     Call<CartResponse> removeCartItem(@Path("id") int id);
     @GET("api/shipping/provinces")
     Call<ProvinceResponse> getProvinces();
+    @GET("api/shipping/couriers")
+    Call<CourierResponse> getCouriers();
 
     @GET("api/shipping/cities")
     Call<CityResponse> getCities(@Query("province") String provinceId);
@@ -118,8 +122,8 @@ public interface ApiService {
     @POST("api/payments/create")
     Call<PaymentResponse> createPayment(@Body Map<String, Object> request);
 
-    @GET("api/payments/status/{orderId}")
-    Call<PaymentResponse> checkPaymentStatus(@Path("orderId") int orderId);
+    @GET("api/payments/status/{orderId}/user/{userId}")
+    Call<PaymentStatusResponse> checkPaymentStatus(@Path("orderId") int orderId, @Path("userId") String userId);
     @DELETE("api/cart/clear/{userId}")
     Call<CartResponse> deleteCartItems(@Path("userId") String userId);
     @GET("api/users/{userId}/purchase-history")
@@ -149,5 +153,8 @@ public interface ApiService {
 
     @GET("api/users/{userId}/wishlist/check/{productId}")
     Call<WishlistCheckResponse> checkWishlist(@Path("userId") String userId, @Path("productId") int productId);
+
+    @POST("api/user/change-password")
+    Call<UserResponse> changePassword(@Body Map<String, Object> request);
 
 }

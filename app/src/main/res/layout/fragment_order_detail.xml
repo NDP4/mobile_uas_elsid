@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -8,11 +7,11 @@
     android:orientation="vertical"
     android:background="@color/background">
 
-    <!-- Header Layout -->
+    <!-- Header -->
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/text_white"
+        android:background="@android:color/white"
         android:elevation="0dp">
 
         <androidx.appcompat.widget.Toolbar
@@ -44,18 +43,13 @@
                     android:textAlignment="center"
                     android:textSize="18sp"
                     android:textColor="@color/text_primary"
-                    android:textStyle="bold"/>
+                    android:fontFamily="sans-serif-medium"/>
 
                 <View
                     android:layout_width="40dp"
                     android:layout_height="40dp"/>
             </LinearLayout>
         </androidx.appcompat.widget.Toolbar>
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="#F0F0F0"/>
     </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.core.widget.NestedScrollView
@@ -67,250 +61,417 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- Order Status Section -->
-            <LinearLayout
+            <!-- Order Status Card -->
+            <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="24dp"
-                android:background="@color/text_white">
-
-                <TextView
-                    android:id="@+id/orderIdText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="14sp"
-                    android:textColor="@color/text_secondary"
-                    tools:text="Order #123456"/>
-
-                <TextView
-                    android:id="@+id/orderStatusText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:textSize="20sp"
-                    android:textColor="@color/primary"
-                    android:textStyle="bold"
-                    tools:text="Delivered"/>
-
-                <TextView
-                    android:id="@+id/orderDateText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:textSize="14sp"
-                    android:textColor="@color/text_secondary"
-                    tools:text="12 January 2024 • 14:30"/>
-            </LinearLayout>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="8dp"
-                android:background="@color/background"/>
-
-            <!-- Shipping Address Section -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="24dp"
-                android:background="@color/text_white">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Shipping Address"
-                    android:textSize="16sp"
-                    android:textColor="@color/text_primary"
-                    android:textStyle="bold"/>
-
-                <TextView
-                    android:id="@+id/recipientNameText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:textSize="14sp"
-                    android:textColor="@color/text_primary"
-                    android:textStyle="bold"
-                    tools:text="John Doe"/>
-
-                <TextView
-                    android:id="@+id/shippingAddressText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:textSize="14sp"
-                    android:textColor="@color/text_secondary"
-                    android:lineSpacingExtra="4dp"
-                    tools:text="123 Street Name\nCity, Province 12345"/>
-            </LinearLayout>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="8dp"
-                android:background="@color/background"/>
-
-            <!-- Order Items Section -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="24dp"
-                android:background="@color/text_white">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Order Items"
-                    android:textSize="16sp"
-                    android:textColor="@color/text_primary"
-                    android:textStyle="bold"/>
-
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/orderItemsRecyclerView"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:nestedScrollingEnabled="false"/>
-            </LinearLayout>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="8dp"
-                android:background="@color/background"/>
-
-            <!-- Payment Summary Section -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="24dp"
-                android:background="@color/text_white">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Payment Summary"
-                    android:textSize="16sp"
-                    android:textColor="@color/text_primary"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="16dp"/>
+                android:layout_margin="16dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:layout_marginBottom="16dp">
+                    android:padding="16dp">
 
-                    <!-- Subtotal -->
+                    <TextView
+                        android:id="@+id/orderIdText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="14sp"
+                        android:textColor="@color/text_secondary"
+                        android:fontFamily="sans-serif-medium"
+                        tools:text="Order #123456"/>
+
+                    <TextView
+                        android:id="@+id/orderStatusText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:textSize="20sp"
+                        android:textColor="@color/primary"
+                        android:fontFamily="sans-serif-bold"
+                        tools:text="Processing"/>
+
+                    <TextView
+                        android:id="@+id/orderDateText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:textSize="14sp"
+                        android:textColor="@color/text_secondary"
+                        android:fontFamily="sans-serif"
+                        tools:text="June 14, 2025 • 14:30"/>
+
+                    <!-- Payment Method & Status -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginBottom="8dp">
+                        android:orientation="vertical"
+                        android:layout_marginTop="16dp">
 
                         <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Subtotal"
-                            android:textSize="14sp"
-                            android:textColor="@color/text_secondary"/>
-
-                        <TextView
-                            android:id="@+id/subtotalText"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textSize="14sp"
+                            android:text="Payment Details"
+                            android:textSize="16sp"
                             android:textColor="@color/text_primary"
-                            tools:text="Rp 150.000"/>
-                    </LinearLayout>
+                            android:fontFamily="sans-serif-medium"/>
 
-                    <!-- Shipping Cost -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginBottom="8dp">
-
-                        <TextView
-                            android:layout_width="0dp"
+                        <LinearLayout
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Shipping Cost"
-                            android:textSize="14sp"
-                            android:textColor="@color/text_secondary"/>
+                            android:orientation="horizontal"
+                            android:layout_marginTop="8dp">
 
-                        <TextView
-                            android:id="@+id/shippingCostText"
-                            android:layout_width="wrap_content"
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Method:"
+                                android:textSize="14sp"
+                                android:textColor="@color/text_secondary"
+                                android:fontFamily="sans-serif-medium"/>
+
+                            <TextView
+                                android:id="@+id/paymentMethodText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                android:textSize="14sp"
+                                android:textColor="@color/text_primary"
+                                android:fontFamily="sans-serif-medium"
+                                tools:text="Bank Transfer (BCA)"/>
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:textSize="14sp"
-                            android:textColor="@color/text_primary"
-                            tools:text="Rp 10.000"/>
-                    </LinearLayout>
+                            android:orientation="horizontal"
+                            android:layout_marginTop="4dp">
 
-                    <!-- Discount if applicable -->
-                    <LinearLayout
-                        android:id="@+id/discountContainer"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginBottom="8dp">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Status:"
+                                android:textSize="14sp"
+                                android:textColor="@color/text_secondary"
+                                android:fontFamily="sans-serif"/>
 
-                        <TextView
-                            android:layout_width="0dp"
+                            <TextView
+                                android:id="@+id/paymentStatusText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                android:textSize="14sp"
+                                android:textColor="@color/success"
+                                android:fontFamily="sans-serif-medium"
+                                tools:text="Paid"/>
+                        </LinearLayout>
+
+                        <!-- Online Payment Details -->
+                        <LinearLayout
+                            android:id="@+id/onlinePaymentContainer"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Discount"
-                            android:textSize="14sp"
-                            android:textColor="@color/text_secondary"/>
+                            android:orientation="vertical"
+                            android:layout_marginTop="8dp"
+                            android:visibility="gone">
 
-                        <TextView
-                            android:id="@+id/discountText"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:textSize="14sp"
-                            android:textColor="@color/success"
-                            tools:text="-Rp 20.000"/>
+                            <TextView
+                                android:id="@+id/transactionIdText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textSize="12sp"
+                                android:textColor="@color/text_secondary"
+                                android:fontFamily="sans-serif"/>
+
+                            <TextView
+                                android:id="@+id/paymentTimeText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:textSize="12sp"
+                                android:textColor="@color/text_secondary"
+                                android:fontFamily="sans-serif"/>
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/viewPaymentButton"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:text="View Payment Details"
+                                android:textAllCaps="false"
+                                app:cornerRadius="8dp"
+                                style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
+
+                            <!-- Midtrans Payment WebView -->
+                            <WebView
+                                android:id="@+id/paymentWebview"
+                                android:layout_width="match_parent"
+                                android:layout_height="600dp"
+                                android:layout_marginTop="16dp"
+                                android:layout_marginBottom="16dp"
+                                android:scrollbars="none"
+                                android:isScrollContainer="true"
+                                android:visibility="gone"/>
+                        </LinearLayout>
                     </LinearLayout>
                 </LinearLayout>
+            </androidx.cardview.widget.CardView>
 
-                <!-- Total Amount -->
+            <!-- Shipping Info Card -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp">
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:paddingTop="16dp"
-                    android:layout_marginTop="8dp"
-                    android:background="@drawable/dotted_line_top">
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
                     <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Total"
-                        android:textSize="16sp"
-                        android:textColor="@color/text_primary"
-                        android:textStyle="bold"/>
-
-                    <TextView
-                        android:id="@+id/totalText"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:text="Shipping Details"
                         android:textSize="16sp"
-                        android:textColor="@color/primary"
-                        android:textStyle="bold"
-                        tools:text="Rp 140.000"/>
+                        android:textColor="@color/text_primary"
+                        android:fontFamily="sans-serif-medium"/>
+
+                    <TextView
+                        android:id="@+id/recipientNameText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:textSize="14sp"
+                        android:textColor="@color/text_primary"
+                        android:fontFamily="sans-serif-medium"
+                        tools:text="John Doe"/>
+
+                    <TextView
+                        android:id="@+id/shippingAddressText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:textSize="14sp"
+                        android:textColor="@color/text_secondary"
+                        android:lineSpacingExtra="4dp"
+                        android:fontFamily="sans-serif"
+                        tools:text="123 Street Name\nCity, Province 12345"/>
+
+                    <!-- Shipping Method -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginTop="16dp">
+
+                        <TextView
+                            android:id="@+id/courierText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="14sp"
+                            android:textColor="@color/text_primary"
+                            android:fontFamily="sans-serif-medium"
+                            tools:text="JNE Regular"/>
+
+                        <TextView
+                            android:id="@+id/estimatedDeliveryText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:textSize="14sp"
+                            android:textColor="@color/text_secondary"
+                            android:fontFamily="sans-serif-medium"
+                            tools:text="Estimated delivery: 2-3 days"/>
+                    </LinearLayout>
                 </LinearLayout>
-            </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Order Items Card -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Order Items"
+                        android:textSize="16sp"
+                        android:textColor="@color/text_primary"
+                        android:fontFamily="sans-serif-medium"/>
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/orderItemsRecyclerView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:nestedScrollingEnabled="false"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Payment Summary Card -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Payment Summary"
+                        android:textSize="16sp"
+                        android:textColor="@color/text_primary"
+                        android:fontFamily="sans-serif-medium"
+                        android:layout_marginBottom="16dp"/>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <!-- Subtotal -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginBottom="8dp">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Subtotal"
+                                android:textSize="14sp"
+                                android:textColor="@color/text_secondary"
+                                android:fontFamily="sans-serif-medium"/>
+
+                            <TextView
+                                android:id="@+id/subtotalText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textSize="14sp"
+                                android:textColor="@color/text_primary"
+                                android:fontFamily="sans-serif-medium"
+                                tools:text="Rp 150.000"/>
+                        </LinearLayout>
+
+                        <!-- Shipping Cost -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginBottom="8dp">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Shipping Cost"
+                                android:textSize="14sp"
+                                android:textColor="@color/text_secondary"
+                                android:fontFamily="sans-serif-medium"/>
+
+                            <TextView
+                                android:id="@+id/shippingCostText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textSize="14sp"
+                                android:textColor="@color/text_primary"
+                                android:fontFamily="sans-serif-medium"
+                                tools:text="Rp 10.000"/>
+                        </LinearLayout>
+
+                        <!-- Discount -->
+                        <LinearLayout
+                            android:id="@+id/discountContainer"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginBottom="8dp">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Discount"
+                                android:textSize="14sp"
+                                android:textColor="@color/text_secondary"
+                                android:fontFamily="sans-serif-medium"/>
+
+                            <TextView
+                                android:id="@+id/discountText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textSize="14sp"
+                                android:textColor="@color/success"
+                                android:fontFamily="sans-serif-medium"
+                                tools:text="-Rp 20.000"/>
+                        </LinearLayout>
+
+                        <!-- Total -->
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:background="#E0E0E0"
+                            android:layout_marginVertical="8dp"/>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Total"
+                                android:textSize="16sp"
+                                android:textColor="@color/text_primary"
+                                android:fontFamily="sans-serif-bold"/>
+
+                            <TextView
+                                android:id="@+id/totalText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textSize="16sp"
+                                android:textColor="@color/primary"
+                                android:fontFamily="sans-serif-bold"
+                                tools:text="Rp 140.000"/>
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
 
             <!-- Action Button -->
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="24dp"
-                android:background="@color/text_white">
+                android:padding="16dp">
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/reorderButton"
@@ -318,7 +479,8 @@
                     android:layout_height="56dp"
                     android:text="Order Again"
                     android:textSize="16sp"
-                    app:cornerRadius="8dp"/>
+                    android:fontFamily="sans-serif-medium"
+                    app:cornerRadius="12dp"/>
             </FrameLayout>
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
