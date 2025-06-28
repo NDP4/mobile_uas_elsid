@@ -80,6 +80,10 @@ public class OrderHistoryFragment extends Fragment implements OrderHistoryAdapte
         ApiClient.getClient().reorderItems(reorderData).enqueue(new Callback<OrderResponse>() {
             @Override
             public void onResponse(@NonNull Call<OrderResponse> call, @NonNull Response<OrderResponse> response) {
+                if (!isAdded() || binding == null) {
+                    return;
+                }
+                
                 if (response.isSuccessful() && response.body() != null) {
                     Navigation.findNavController(requireView())
                             .navigate(R.id.action_navigation_order_history_to_navigation_checkout);
@@ -90,6 +94,10 @@ public class OrderHistoryFragment extends Fragment implements OrderHistoryAdapte
 
             @Override
             public void onFailure(@NonNull Call<OrderResponse> call, @NonNull Throwable t) {
+                if (!isAdded() || binding == null) {
+                    return;
+                }
+                
                 showError("Network error: " + t.getMessage());
             }
         });
@@ -140,6 +148,10 @@ public class OrderHistoryFragment extends Fragment implements OrderHistoryAdapte
                 .enqueue(new Callback<OrderResponse>() {
                     @Override
                     public void onResponse(@NonNull Call<OrderResponse> call, @NonNull Response<OrderResponse> response) {
+                        if (!isAdded() || binding == null) {
+                            return;
+                        }
+                        
                         binding.progressBar.setVisibility(View.GONE);
 
                         if (response.isSuccessful() && response.body() != null) {
@@ -163,6 +175,10 @@ public class OrderHistoryFragment extends Fragment implements OrderHistoryAdapte
 
                     @Override
                     public void onFailure(@NonNull Call<OrderResponse> call, @NonNull Throwable t) {
+                        if (!isAdded() || binding == null) {
+                            return;
+                        }
+                        
                         binding.progressBar.setVisibility(View.GONE);
                         showError("Network error: " + t.getMessage());
                         showEmptyState();

@@ -135,7 +135,8 @@ public class EditProfileFragment extends Fragment {
                 .enqueue(new Callback<UserResponse>() {
                     @Override
                     public void onResponse(Call<UserResponse> call, Response<UserResponse> response) {
-                        if (!isFragmentActive || binding == null) return;
+                        // Check if fragment is still active and binding is not null
+                        if (!isAdded() || !isFragmentActive || binding == null) return;
                         binding.loadingIndicator.setVisibility(View.GONE);
 
                         if (response.isSuccessful() && response.body() != null) {

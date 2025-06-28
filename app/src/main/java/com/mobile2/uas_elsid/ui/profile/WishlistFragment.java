@@ -77,6 +77,10 @@ public class WishlistFragment extends Fragment {
         ApiClient.getClient().getWishlist(userId).enqueue(new Callback<WishlistResponse>() {
             @Override
             public void onResponse(@NonNull Call<WishlistResponse> call, @NonNull Response<WishlistResponse> response) {
+                if (!isAdded() || binding == null) {
+                    return;
+                }
+                
                 binding.progressBar.setVisibility(View.GONE);
 
                 if (response.isSuccessful() && response.body() != null) {
@@ -111,6 +115,10 @@ public class WishlistFragment extends Fragment {
 
             @Override
             public void onFailure(@NonNull Call<WishlistResponse> call, @NonNull Throwable t) {
+                if (!isAdded() || binding == null) {
+                    return;
+                }
+                
                 binding.progressBar.setVisibility(View.GONE);
                 showEmptyState();
             }

@@ -77,6 +77,11 @@ public class CheckoutFragment extends Fragment implements CartAdapter.CartItemLi
         CartManager.getInstance(requireContext()).getCartItems(new CartManager.CartCallback() {
             @Override
             public void onSuccess(List<CartItem> items) {
+                // Check if fragment is still attached and binding is not null
+                if (!isAdded() || binding == null) {
+                    return;
+                }
+                
                 if (items.isEmpty()) {
                     binding.recyclerViewCart.setVisibility(View.GONE);
                     binding.emptyStateView.setVisibility(View.VISIBLE);
@@ -93,6 +98,10 @@ public class CheckoutFragment extends Fragment implements CartAdapter.CartItemLi
 
             @Override
             public void onError(String message) {
+                // Check if fragment is still attached
+                if (!isAdded()) {
+                    return;
+                }
                 Toasty.error(requireContext(), message).show();
             }
         });

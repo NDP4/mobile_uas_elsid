@@ -90,6 +90,10 @@ public class WriteReviewFragment extends Fragment {
         ApiClient.getClient().getProduct(productId).enqueue(new Callback<ProductDetailResponse>() {
             @Override
             public void onResponse(@NonNull Call<ProductDetailResponse> call, @NonNull Response<ProductDetailResponse> response) {
+                if (!isAdded() || binding == null) {
+                    return;
+                }
+                
                 if (response.isSuccessful() && response.body() != null) {
                     Product product = response.body().getProduct();
                     if (product != null) {
@@ -100,6 +104,10 @@ public class WriteReviewFragment extends Fragment {
 
             @Override
             public void onFailure(@NonNull Call<ProductDetailResponse> call, @NonNull Throwable t) {
+                if (!isAdded() || binding == null) {
+                    return;
+                }
+                
                 showError("Failed to load product details");
             }
         });

@@ -195,6 +195,10 @@ public class ProfileFragment extends Fragment {
             ApiClient.getClient().changePassword(request).enqueue(new Callback<UserResponse>() {
                 @Override
                 public void onResponse(@NonNull Call<UserResponse> call, @NonNull Response<UserResponse> response) {
+                    if (!isAdded() || binding == null) {
+                        return;
+                    }
+                    
                     progressBar.setVisibility(View.GONE);
                     changeButton.setEnabled(true);
 

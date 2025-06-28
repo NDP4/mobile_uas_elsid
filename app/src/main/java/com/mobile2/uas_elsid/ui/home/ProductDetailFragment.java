@@ -272,6 +272,13 @@ public class ProductDetailFragment extends Fragment {
                 .enqueue(new Callback<WishlistResponse>() {
                     @Override
                     public void onResponse(@NonNull Call<WishlistResponse> call,
+                                          @NonNull Response<WishlistResponse> response) {
+                        // Check if fragment is still attached and binding is not null
+                        if (!isAdded() || binding == null) {
+                            return;
+                        }
+                    @Override
+                    public void onResponse(@NonNull Call<WishlistResponse> call,
                                            @NonNull Response<WishlistResponse> response) {
                         if (response.isSuccessful()) {
                             isInWishlist = false;
@@ -291,6 +298,12 @@ public class ProductDetailFragment extends Fragment {
 
     private void loadProductDetails(int productId) {
         ApiClient.getClient().getProduct(productId).enqueue(new Callback<ProductDetailResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<ProductDetailResponse> call, @NonNull Response<ProductDetailResponse> response) {
+                // Check if fragment is still attached and binding is not null
+                if (!isAdded() || binding == null) {
+                    return;
+                }
             @Override
             public void onResponse(@NonNull Call<ProductDetailResponse> call,
                                    @NonNull Response<ProductDetailResponse> response) {
@@ -589,6 +602,10 @@ public class ProductDetailFragment extends Fragment {
         ApiClient.getClient().getProductReviews(productId).enqueue(new Callback<ReviewResponse>() {
             @Override
             public void onResponse(@NonNull Call<ReviewResponse> call, @NonNull Response<ReviewResponse> response) {
+                // Check if fragment is still attached and binding is not null
+                if (!isAdded() || binding == null) {
+                    return;
+                }
                 System.out.println("Review response code: " + response.code());
 
                 if (response.isSuccessful() && response.body() != null) {
@@ -638,6 +655,12 @@ public class ProductDetailFragment extends Fragment {
             public void onFailure(@NonNull Call<ReviewResponse> call, @NonNull Throwable t) {
                 System.out.println("Review loading failed: " + t.getMessage());
                 t.printStackTrace();
+                
+                // Check if fragment is still attached and binding is not null
+                if (!isAdded() || binding == null) {
+                    return;
+                }
+                
                 // Show error state
                 binding.averageRatingText.setVisibility(View.GONE);
                 binding.averageRatingBar.setVisibility(View.GONE);
@@ -754,6 +777,11 @@ public class ProductDetailFragment extends Fragment {
         ApiClient.getClient().getProducts().enqueue(new Callback<ProductResponse>() {
             @Override
             public void onResponse(@NonNull Call<ProductResponse> call, @NonNull Response<ProductResponse> response) {
+                // Check if fragment is still attached and binding is not null
+                if (!isAdded() || binding == null) {
+                    return;
+                }
+                
                 if (response.isSuccessful() && response.body() != null) {
                     List<Product> allProducts = response.body().getProducts();
                     if (allProducts != null && !allProducts.isEmpty()) {
@@ -815,6 +843,11 @@ public class ProductDetailFragment extends Fragment {
 
             @Override
             public void onFailure(@NonNull Call<ProductResponse> call, @NonNull Throwable t) {
+                // Check if fragment is still attached and binding is not null
+                if (!isAdded() || binding == null) {
+                    return;
+                }
+                
                 binding.recommendationsSection.setVisibility(View.GONE);
                 Toasty.error(requireContext(), "Failed to load recommendations: " + t.getMessage()).show();
             }

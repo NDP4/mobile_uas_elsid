@@ -78,6 +78,10 @@ public class OrderDetailFragment extends Fragment {
         ApiClient.getClient().getOrder(orderId).enqueue(new Callback<OrderResponse>() {
             @Override
             public void onResponse(@NonNull Call<OrderResponse> call, @NonNull Response<OrderResponse> response) {
+                if (!isAdded() || binding == null) {
+                    return;
+                }
+                
                 showLoading(false);
                 if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
                     Order order = response.body().getData().getOrder();

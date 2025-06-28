@@ -197,25 +197,29 @@ public class PaymentWebViewFragment extends Fragment {
         ApiClient.getClient().deleteCartItems(userId).enqueue(new Callback<CartResponse>() {
             @Override
             public void onResponse(@NonNull Call<CartResponse> call, @NonNull Response<CartResponse> response) {
+                if (!isAdded() || getActivity() == null || webView == null) {
+                    return;
+                }
+                
                 if (response.isSuccessful()) {
                     // Clear local cart data
                     cartManager.clearCart(finalCallback);
                 } else {
-                    if (isAdded() && getActivity() != null) {
-                        getActivity().runOnUiThread(() -> {
-                            finalCallback.onError("Failed to clear cart from server");
-                        });
-                    }
+                    getActivity().runOnUiThread(() -> {
+                        finalCallback.onError("Failed to clear cart from server");
+                    });
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<CartResponse> call, @NonNull Throwable t) {
-                if (isAdded() && getActivity() != null) {
-                    getActivity().runOnUiThread(() -> {
-                        finalCallback.onError("Network error: " + t.getMessage());
-                    });
+                if (!isAdded() || getActivity() == null || webView == null) {
+                    return;
                 }
+                
+                getActivity().runOnUiThread(() -> {
+                    finalCallback.onError("Network error: " + t.getMessage());
+                });
             }
         });
     }
