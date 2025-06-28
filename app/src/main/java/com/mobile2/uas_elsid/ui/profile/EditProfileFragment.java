@@ -115,8 +115,16 @@ public class EditProfileFragment extends Fragment {
         updateData.put("fullname", binding.fullnameInput.getText().toString().trim());
         updateData.put("phone", binding.phoneInput.getText().toString().trim());
         updateData.put("address", binding.addressInput.getText().toString().trim());
-        updateData.put("province", binding.provinceInput.getText().toString().trim());
-        updateData.put("city", binding.cityInput.getText().toString().trim());
+        
+        // Handle province and city inputs safely
+        if (binding.provinceInput != null) {
+            updateData.put("province", binding.provinceInput.getText().toString().trim());
+        }
+        
+        if (binding.cityInput != null) {
+            updateData.put("city", binding.cityInput.getText().toString().trim());
+        }
+        
         updateData.put("postal_code", binding.postalCodeInput.getText().toString().trim());
 
         // Show loading
@@ -261,8 +269,16 @@ public class EditProfileFragment extends Fragment {
         binding.fullnameInput.setText(sessionManager.getFullname());
         binding.phoneInput.setText(sessionManager.getPhone());
         binding.addressInput.setText(sessionManager.getAddress());
-        binding.provinceInput.setText(sessionManager.getProvince());
-        binding.cityInput.setText(sessionManager.getCity());
+        
+        // Set province and city values if they exist in session
+        if (binding.provinceInput != null) {
+            binding.provinceInput.setText(sessionManager.getProvince());
+        }
+        
+        if (binding.cityInput != null) {
+            binding.cityInput.setText(sessionManager.getCity());
+        }
+        
         binding.postalCodeInput.setText(sessionManager.getPostalCode());
 
         // Load avatar if exists

@@ -83,6 +83,7 @@ public class OrderDetailFragment extends Fragment {
                     Order order = response.body().getData().getOrder();
                     if (order != null) {
                         updateOrderDetails(response.body());
+                        updateTrackingStatus(order.getStatus());
                         checkPaymentStatus(order);
                     } else {
                         showError("Order data is missing");
@@ -99,6 +100,136 @@ public class OrderDetailFragment extends Fragment {
                 showError("Network error: " + t.getMessage());
             }
         });
+    }
+    
+    private void updateTrackingStatus(String status) {
+        // Default all steps to inactive
+        resetTrackingSteps();
+        
+        // Set status icon based on order status
+        int statusIconRes = R.drawable.ic_order_processing;
+        
+        if (status == null) status = "pending";
+        
+        switch (status.toLowerCase()) {
+            case "pending":
+                activatePendingStep();
+                statusIconRes = R.drawable.ic_order_pending;
+                binding.statusIcon.setImageResource(statusIconRes);
+                binding.statusIcon.setColorFilter(ContextCompat.getColor(requireContext(), R.color.warning));
+                break;
+                
+            case "processing":
+                activateProcessingStep();
+                statusIconRes = R.drawable.ic_order_processing;
+                binding.statusIcon.setImageResource(statusIconRes);
+                binding.statusIcon.setColorFilter(ContextCompat.getColor(requireContext(), R.color.primary));
+                break;
+                
+            case "picked_up":
+            case "in_transit":
+                activateInTransitStep();
+                statusIconRes = R.drawable.ic_picked_up;
+                binding.statusIcon.setImageResource(statusIconRes);
+                binding.statusIcon.setColorFilter(ContextCompat.getColor(requireContext(), R.color.primary));
+                break;
+                
+            case "out_for_delivery":
+                activateOutForDeliveryStep();
+                statusIconRes = R.drawable.ic_out_for_delivery;
+                binding.statusIcon.setImageResource(statusIconRes);
+                binding.statusIcon.setColorFilter(ContextCompat.getColor(requireContext(), R.color.primary));
+                break;
+                
+            case "delivered":
+                activateDeliveredStep();
+                statusIconRes = R.drawable.ic_order_delivered;
+                binding.statusIcon.setImageResource(statusIconRes);
+                binding.statusIcon.setColorFilter(ContextCompat.getColor(requireContext(), R.color.success));
+                break;
+                
+            case "cancelled":
+                statusIconRes = R.drawable.ic_order_cancelled;
+                binding.statusIcon.setImageResource(statusIconRes);
+                binding.statusIcon.setColorFilter(ContextCompat.getColor(requireContext(), R.color.error));
+                binding.trackingContainer.setVisibility(View.GONE);
+                break;
+                
+            default:
+                binding.trackingContainer.setVisibility(View.GONE);
+                break;
+        }
+    }
+    
+    private void resetTrackingSteps() {
+        // Pending step
+        binding.pendingStep.setAlpha(0.5f);
+        binding.pendingIcon.setColorFilter(ContextCompat.getColor(requireContext(), R.color.text_secondary));
+        binding.pendingLine.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.text_secondary));
+        
+        // Processing step
+        binding.processingStep.setAlpha(0.5f);
+        binding.processingIcon.setColorFilter(ContextCompat.getColor(requireContext(), R.color.text_secondary));
+        binding.processingLine.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.text_secondary));
+        
+        // In Transit step
+        binding.inTransitStep.setAlpha(0.5f);
+        binding.inTransitIcon.setColorFilter(ContextCompat.getColor(requireContext(), R.color.text_secondary));
+        binding.inTransitLine.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.text_secondary));
+        
+        // Delivered step
+        binding.deliveredStep.setAlpha(0.5f);
+        binding.deliveredIcon.setColorFilter(ContextCompat.getColor(requireContext(), R.color.text_secondary));
+    }
+    
+    private void activatePendingStep() {
+        binding.pendingStep.setAlpha(1.0f);
+        binding.pendingIcon.setColorFilter(ContextCompat.getColor(requireContext(), R.color.primary));
+        
+        binding.pendingDescription.setText("Your order has been received and is awaiting confirmation");
+    }
+    
+    private void activateProcessingStep() {
+        // Activate current and previous steps
+        activatePendingStep();
+        
+        binding.processingStep.setAlpha(1.0f);
+        binding.processingIcon.setColorFilter(ContextCompat.getColor(requireContext(), R.color.primary));
+        binding.pendingLine.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.primary));
+        
+        binding.pendingDescription.setText("Your order has been confirmed");
+        binding.processingDescription.setText("Your order is being prepared and packaged");
+    }
+    
+    private void activateInTransitStep() {
+        // Activate current and previous steps
+        activateProcessingStep();
+        
+        binding.inTransitStep.setAlpha(1.0f);
+        binding.inTransitIcon.setColorFilter(ContextCompat.getColor(requireContext(), R.color.primary));
+        binding.processingLine.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.primary));
+        
+        binding.processingDescription.setText("Your order has been prepared and packaged");
+        binding.inTransitDescription.setText("Your package is on its way to you");
+    }
+    
+    private void activateOutForDeliveryStep() {
+        // Activate current and previous steps
+        activateInTransitStep();
+        
+        binding.inTransitDescription.setText("Your package is out for delivery today");
+    }
+    
+    private void activateDeliveredStep() {
+        // Activate current and previous steps
+        activateInTransitStep();
+        
+        binding.deliveredStep.setAlpha(1.0f);
+        binding.deliveredIcon.setColorFilter(ContextCompat.getColor(requireContext(), R.color.success));
+        binding.inTransitLine.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.primary));
+        
+        binding.inTransitDescription.setText("Your package has arrived in your area");
+        binding.deliveredDescription.setText("Your package has been delivered successfully");
     }
 
     private void updateOrderDetails(OrderResponse response) {
@@ -118,6 +249,13 @@ public class OrderDetailFragment extends Fragment {
         // Set payment status color
         int statusColor = getPaymentStatusColor(order.getPaymentStatus());
         binding.paymentStatusText.setTextColor(statusColor);
+        
+        // Set payment method icon
+        if ("cod".equalsIgnoreCase(order.getPaymentMethod())) {
+            binding.paymentMethodIcon.setImageResource(R.drawable.ic_add);
+        } else {
+            binding.paymentMethodIcon.setImageResource(R.drawable.ic_payment);
+        }
 
         // Show payment info for non-COD orders
         if (order.getPaymentMethod() != null && !order.getPaymentMethod().equalsIgnoreCase("cod")) {
@@ -317,6 +455,8 @@ public class OrderDetailFragment extends Fragment {
     }
 
     private int getPaymentStatusColor(String status) {
+        if (status == null) return ContextCompat.getColor(requireContext(), R.color.text_primary);
+        
         switch (status.toLowerCase()) {
             case "paid":
                 return ContextCompat.getColor(requireContext(), R.color.success);
