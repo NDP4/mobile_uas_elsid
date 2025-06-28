@@ -90,7 +90,7 @@ public class ProductDetailFragment extends Fragment {
         // Set status bar transparent
         requireActivity().getWindow().setStatusBarColor(Color.TRANSPARENT);
         requireActivity().getWindow().getDecorView().setSystemUiVisibility(
-            View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
 
         binding = FragmentProductDetailBinding.inflate(inflater, container, false);
         sessionManager = new SessionManager(requireContext());
@@ -131,7 +131,7 @@ public class ProductDetailFragment extends Fragment {
         // Setup RecyclerView untuk image indicator
         indicatorAdapter = new ImageIndicatorAdapter(binding.imageSlider);
         binding.imageIndicator.setLayoutManager(
-            new LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false));
+                new LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false));
         binding.imageIndicator.setAdapter(indicatorAdapter);
 
         // Sync ViewPager2 dengan indicator
@@ -272,13 +272,6 @@ public class ProductDetailFragment extends Fragment {
                 .enqueue(new Callback<WishlistResponse>() {
                     @Override
                     public void onResponse(@NonNull Call<WishlistResponse> call,
-                                          @NonNull Response<WishlistResponse> response) {
-                        // Check if fragment is still attached and binding is not null
-                        if (!isAdded() || binding == null) {
-                            return;
-                        }
-                    @Override
-                    public void onResponse(@NonNull Call<WishlistResponse> call,
                                            @NonNull Response<WishlistResponse> response) {
                         if (response.isSuccessful()) {
                             isInWishlist = false;
@@ -298,12 +291,6 @@ public class ProductDetailFragment extends Fragment {
 
     private void loadProductDetails(int productId) {
         ApiClient.getClient().getProduct(productId).enqueue(new Callback<ProductDetailResponse>() {
-            @Override
-            public void onResponse(@NonNull Call<ProductDetailResponse> call, @NonNull Response<ProductDetailResponse> response) {
-                // Check if fragment is still attached and binding is not null
-                if (!isAdded() || binding == null) {
-                    return;
-                }
             @Override
             public void onResponse(@NonNull Call<ProductDetailResponse> call,
                                    @NonNull Response<ProductDetailResponse> response) {
@@ -441,7 +428,7 @@ public class ProductDetailFragment extends Fragment {
             });
 
             binding.variantsRecyclerView.setLayoutManager(
-                new LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false));
+                    new LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false));
             binding.variantsRecyclerView.setAdapter(variantAdapter);
         }
 
@@ -602,10 +589,6 @@ public class ProductDetailFragment extends Fragment {
         ApiClient.getClient().getProductReviews(productId).enqueue(new Callback<ReviewResponse>() {
             @Override
             public void onResponse(@NonNull Call<ReviewResponse> call, @NonNull Response<ReviewResponse> response) {
-                // Check if fragment is still attached and binding is not null
-                if (!isAdded() || binding == null) {
-                    return;
-                }
                 System.out.println("Review response code: " + response.code());
 
                 if (response.isSuccessful() && response.body() != null) {
@@ -625,14 +608,14 @@ public class ProductDetailFragment extends Fragment {
 
                         // Show only first 3 reviews in the main view
                         List<ProductReview> limitedReviews = reviews.size() > 1 ?
-                            reviews.subList(0, 1) : reviews;
+                                reviews.subList(0, 1) : reviews;
 
                         reviewAdapter.setReviews(limitedReviews);
                         calculateAverageRating(reviews);
 
                         // Show/hide see all button based on review count
                         binding.seeAllReviewsButton.setVisibility(
-                            reviews.size() > 1 ? View.VISIBLE : View.GONE);
+                                reviews.size() > 1 ? View.VISIBLE : View.GONE);
 
                         binding.reviewsSection.setVisibility(View.VISIBLE);
                         System.out.println("Reviews populated and section made visible");
@@ -655,12 +638,6 @@ public class ProductDetailFragment extends Fragment {
             public void onFailure(@NonNull Call<ReviewResponse> call, @NonNull Throwable t) {
                 System.out.println("Review loading failed: " + t.getMessage());
                 t.printStackTrace();
-                
-                // Check if fragment is still attached and binding is not null
-                if (!isAdded() || binding == null) {
-                    return;
-                }
-                
                 // Show error state
                 binding.averageRatingText.setVisibility(View.GONE);
                 binding.averageRatingBar.setVisibility(View.GONE);
@@ -716,7 +693,7 @@ public class ProductDetailFragment extends Fragment {
             averageRatingText.setText(String.format(Locale.getDefault(), "%.1f", averageRating));
             averageRatingBar.setRating(averageRating);
             totalReviewsText.setText(String.format(Locale.getDefault(),
-                "Based on %d reviews", allReviews.size()));
+                    "Based on %d reviews", allReviews.size()));
         }
 
         // Setup reviews list
@@ -781,7 +758,7 @@ public class ProductDetailFragment extends Fragment {
                 if (!isAdded() || binding == null) {
                     return;
                 }
-                
+
                 if (response.isSuccessful() && response.body() != null) {
                     List<Product> allProducts = response.body().getProducts();
                     if (allProducts != null && !allProducts.isEmpty()) {
@@ -847,7 +824,7 @@ public class ProductDetailFragment extends Fragment {
                 if (!isAdded() || binding == null) {
                     return;
                 }
-                
+
                 binding.recommendationsSection.setVisibility(View.GONE);
                 Toasty.error(requireContext(), "Failed to load recommendations: " + t.getMessage()).show();
             }
