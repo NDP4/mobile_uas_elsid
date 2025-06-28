@@ -243,6 +243,10 @@ public class ProductDetailFragment extends Fragment {
     }
 
     private void addToWishlist() {
+        if (!isAdded() || binding == null) {
+            return;
+        }
+        
         Map<String, Integer> request = new HashMap<>();
         request.put("product_id", currentProduct.getId());
 
@@ -251,6 +255,11 @@ public class ProductDetailFragment extends Fragment {
                     @Override
                     public void onResponse(@NonNull Call<WishlistResponse> call,
                                            @NonNull Response<WishlistResponse> response) {
+                        // Check if fragment is still attached and binding is not null
+                        if (!isAdded() || binding == null) {
+                            return;
+                        }
+                        
                         if (response.isSuccessful()) {
                             isInWishlist = true;
                             updateWishlistButtonState();
@@ -262,6 +271,11 @@ public class ProductDetailFragment extends Fragment {
 
                     @Override
                     public void onFailure(@NonNull Call<WishlistResponse> call, @NonNull Throwable t) {
+                        // Check if fragment is still attached and binding is not null
+                        if (!isAdded() || binding == null) {
+                            return;
+                        }
+                        
                         Toasty.error(requireContext(), "Network error").show();
                     }
                 });
@@ -294,6 +308,12 @@ public class ProductDetailFragment extends Fragment {
             @Override
             public void onResponse(@NonNull Call<ProductDetailResponse> call,
                                    @NonNull Response<ProductDetailResponse> response) {
+                // Check if fragment is still attached and binding is not null
+                if (!isAdded() || binding == null) {
+                    System.out.println("Fragment detached or binding null, skipping response handling");
+                    return;
+                }
+                
                 if (response.isSuccessful() && response.body() != null) {
                     Product product = response.body().getProduct();
                     if (product != null) {
@@ -320,6 +340,11 @@ public class ProductDetailFragment extends Fragment {
 
             @Override
             public void onFailure(@NonNull Call<ProductDetailResponse> call, @NonNull Throwable t) {
+                // Check if fragment is still attached and binding is not null
+                if (!isAdded() || binding == null) {
+                    return;
+                }
+                
                 showError("Failed to load product details: " + t.getMessage());
             }
         });
@@ -333,6 +358,9 @@ public class ProductDetailFragment extends Fragment {
             @Override
             public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
                 if (response.isSuccessful()) {
+                    if (!isAdded() || binding == null) {
+                        return;
+                    }
                     // View count updated successfully
                     // Update the UI if needed
                     if (currentProduct != null) {
@@ -351,6 +379,9 @@ public class ProductDetailFragment extends Fragment {
     }
 
     private void showError(String message) {
+        if (!isAdded() || binding == null) {
+            return;
+        }
         if (binding != null) {
             binding.errorText.setText(message);
             binding.errorText.setVisibility(View.VISIBLE);
@@ -359,6 +390,12 @@ public class ProductDetailFragment extends Fragment {
     }
 
     private void updateUI(Product product) {
+        // Check if the fragment is still attached and binding is not null
+        if (!isAdded() || binding == null) {
+            System.out.println("Cannot update UI: Fragment detached or binding null");
+            return;
+        }
+        
         binding.titleText.setText(product.getTitle());
         binding.categoryText.setText(product.getCategory());
         binding.categoryText.setClickable(true);
@@ -496,6 +533,11 @@ public class ProductDetailFragment extends Fragment {
     }
 
     private void setupProductDetails(Product product) {
+        // Check if fragment is still attached and binding is not null
+        if (!isAdded() || binding == null) {
+            return;
+        }
+        
         // Set initial description
         binding.descriptionText.setText(product.getDescription());
         binding.descriptionText.setMaxLines(3);
@@ -584,11 +626,22 @@ public class ProductDetailFragment extends Fragment {
 
     private void loadReviews(int productId) {
         System.out.println("Starting to load reviews for product: " + productId);
+        if (!isAdded() || binding == null) {
+            System.out.println("Fragment detached or binding null, skipping load reviews");
+            return;
+        }
+        
         binding.reviewsSection.setVisibility(View.VISIBLE);
 
         ApiClient.getClient().getProductReviews(productId).enqueue(new Callback<ReviewResponse>() {
             @Override
             public void onResponse(@NonNull Call<ReviewResponse> call, @NonNull Response<ReviewResponse> response) {
+                // Check if fragment is still attached and binding is not null
+                if (!isAdded() || binding == null) {
+                    System.out.println("Fragment detached or binding null, skipping review response handling");
+                    return;
+                }
+                
                 System.out.println("Review response code: " + response.code());
 
                 if (response.isSuccessful() && response.body() != null) {
@@ -608,14 +661,14 @@ public class ProductDetailFragment extends Fragment {
 
                         // Show only first 3 reviews in the main view
                         List<ProductReview> limitedReviews = reviews.size() > 1 ?
-                                reviews.subList(0, 1) : reviews;
+                            reviews.subList(0, 1) : reviews;
 
                         reviewAdapter.setReviews(limitedReviews);
                         calculateAverageRating(reviews);
 
                         // Show/hide see all button based on review count
                         binding.seeAllReviewsButton.setVisibility(
-                                reviews.size() > 1 ? View.VISIBLE : View.GONE);
+                            reviews.size() > 1 ? View.VISIBLE : View.GONE);
 
                         binding.reviewsSection.setVisibility(View.VISIBLE);
                         System.out.println("Reviews populated and section made visible");
@@ -636,6 +689,12 @@ public class ProductDetailFragment extends Fragment {
 
             @Override
             public void onFailure(@NonNull Call<ReviewResponse> call, @NonNull Throwable t) {
+                // Check if fragment is still attached and binding is not null
+                if (!isAdded() || binding == null) {
+                    System.out.println("Fragment detached or binding null, skipping review failure handling");
+                    return;
+                }
+                
                 System.out.println("Review loading failed: " + t.getMessage());
                 t.printStackTrace();
                 // Show error state
@@ -750,15 +809,21 @@ public class ProductDetailFragment extends Fragment {
 
     private void loadRecommendations() {
         if (currentProduct == null) return;
+        
+        if (!isAdded() || binding == null) {
+            System.out.println("Fragment detached or binding null, skipping load recommendations");
+            return;
+        }
 
         ApiClient.getClient().getProducts().enqueue(new Callback<ProductResponse>() {
             @Override
             public void onResponse(@NonNull Call<ProductResponse> call, @NonNull Response<ProductResponse> response) {
                 // Check if fragment is still attached and binding is not null
                 if (!isAdded() || binding == null) {
+                    System.out.println("Fragment detached or binding null, skipping recommendations response handling");
                     return;
                 }
-
+                
                 if (response.isSuccessful() && response.body() != null) {
                     List<Product> allProducts = response.body().getProducts();
                     if (allProducts != null && !allProducts.isEmpty()) {
@@ -822,9 +887,10 @@ public class ProductDetailFragment extends Fragment {
             public void onFailure(@NonNull Call<ProductResponse> call, @NonNull Throwable t) {
                 // Check if fragment is still attached and binding is not null
                 if (!isAdded() || binding == null) {
+                    System.out.println("Fragment detached or binding null, skipping recommendations failure handling");
                     return;
                 }
-
+                
                 binding.recommendationsSection.setVisibility(View.GONE);
                 Toasty.error(requireContext(), "Failed to load recommendations: " + t.getMessage()).show();
             }
