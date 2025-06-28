@@ -106,44 +106,46 @@
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <!-- Address Section -->
-<!--                    <TextView-->
-<!--                        android:layout_width="wrap_content"-->
-<!--                        android:layout_height="wrap_content"-->
-<!--                        android:text="Shipping Address"-->
-<!--                        android:textStyle="bold"-->
-<!--                        android:textSize="16sp"-->
-<!--                        android:layout_marginBottom="8dp"/>-->
+                    <!--                    <TextView-->
+                    <!--                        android:layout_width="wrap_content"-->
+                    <!--                        android:layout_height="wrap_content"-->
+                    <!--                        android:text="Shipping Address"-->
+                    <!--                        android:textStyle="bold"-->
+                    <!--                        android:textSize="16sp"-->
+                    <!--                        android:layout_marginBottom="8dp"/>-->
 
-                    <!-- Province Spinner -->
+                    <!-- Province Input -->
                     <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/provinceContainer"
+                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="16dp"
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                        android:hint="Province"
                         app:startIconDrawable="@drawable/ic_province">
 
-                        <AutoCompleteTextView
-                            android:id="@+id/provinceSpinner"
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/provinceInput"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:hint="Select Province"
-                            android:inputType="none"/>
+                            android:inputType="textCapWords"/>
                     </com.google.android.material.textfield.TextInputLayout>
 
-                    <!-- City Spinner -->
+                    <!-- City Input -->
                     <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/cityContainer"
+                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="16dp"
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                        android:hint="City"
                         app:startIconDrawable="@drawable/ic_city">
 
-                        <AutoCompleteTextView
-                            android:id="@+id/citySpinner"
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/cityInput"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:hint="Select City"
-                            android:inputType="none"/>
+                            android:inputType="textCapWords"/>
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.textfield.TextInputLayout

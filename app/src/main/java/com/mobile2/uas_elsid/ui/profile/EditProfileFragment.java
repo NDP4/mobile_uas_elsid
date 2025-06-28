@@ -22,12 +22,8 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.mobile2.uas_elsid.LoginActivity;
 import com.mobile2.uas_elsid.R;
 import com.mobile2.uas_elsid.api.ApiClient;
-import com.mobile2.uas_elsid.api.response.CityResponse;
-import com.mobile2.uas_elsid.api.response.ProvinceResponse;
 import com.mobile2.uas_elsid.api.response.UserResponse;
 import com.mobile2.uas_elsid.databinding.FragmentEditProfileBinding;
-import com.mobile2.uas_elsid.model.City;
-import com.mobile2.uas_elsid.model.Province;
 import com.mobile2.uas_elsid.utils.SessionManager;
 
 import java.io.File;
@@ -53,13 +49,6 @@ public class EditProfileFragment extends Fragment {
     private String selectedImagePath;
     private boolean isFragmentActive = true;
     private static final int PERMISSION_REQUEST_CODE = 123;
-
-    private List<Province> provinceList = new ArrayList<>();
-    private List<City> cityList = new ArrayList<>();
-    private ArrayAdapter<String> provinceAdapter;
-    private ArrayAdapter<String> cityAdapter;
-    private String selectedProvinceId;
-    private String selectedCityId;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
@@ -126,6 +115,9 @@ public class EditProfileFragment extends Fragment {
         updateData.put("fullname", binding.fullnameInput.getText().toString().trim());
         updateData.put("phone", binding.phoneInput.getText().toString().trim());
         updateData.put("address", binding.addressInput.getText().toString().trim());
+        updateData.put("province", binding.provinceInput.getText().toString().trim());
+        updateData.put("city", binding.cityInput.getText().toString().trim());
+        updateData.put("postal_code", binding.postalCodeInput.getText().toString().trim());
 
         // Show loading
         binding.loadingIndicator.setVisibility(View.VISIBLE);
@@ -141,7 +133,7 @@ public class EditProfileFragment extends Fragment {
                         if (response.isSuccessful() && response.body() != null) {
                             UserResponse userResponse = response.body();
                             if (userResponse.getStatus() == 1) {
-                                // Update session data with IDs
+                                // Update session data
                                 sessionManager.updateProfile(
                                         updateData.get("fullname"),
                                         updateData.get("phone"),
@@ -149,8 +141,8 @@ public class EditProfileFragment extends Fragment {
                                         updateData.get("city"),
                                         updateData.get("province"),
                                         updateData.get("postal_code"),
-                                        selectedProvinceId,
-                                        selectedCityId
+                                        null, // provinceId not needed
+                                        null  // cityId not needed
                                 );
                                 Toasty.success(requireContext(), "Profile updated successfully").show();
                                 Navigation.findNavController(binding.getRoot()).navigateUp();
@@ -262,121 +254,6 @@ public class EditProfileFragment extends Fragment {
         binding.avatarImage.setOnClickListener(v -> openImagePicker());
         binding.toolbar.setNavigationOnClickListener(v ->
                 Navigation.findNavController(v).navigateUp());
-
-        // Setup adapters for province and city spinners
-        provinceAdapter = new ArrayAdapter<>(requireContext(),
-                android.R.layout.simple_dropdown_item_1line, new ArrayList<>());
-        cityAdapter = new ArrayAdapter<>(requireContext(),
-                android.R.layout.simple_dropdown_item_1line, new ArrayList<>());
-
-        binding.provinceSpinner.setAdapter(provinceAdapter);
-        binding.citySpinner.setAdapter(cityAdapter);
-
-        // Load provinces
-        loadProvinces();
-
-        // Province selection listener
-        binding.provinceSpinner.setOnItemClickListener((parent, view, position, id) -> {
-            String selectedProvince = provinceAdapter.getItem(position);
-            // Reset city spinner when province changes
-            binding.citySpinner.setText("", false);
-
-            // Find the selected province and save its ID
-            for (Province province : provinceList) {
-                if (province.getName().equals(selectedProvince)) {
-                    selectedProvinceId = province.getId(); // Add this as class variable
-                    loadCities(province.getId());
-                    break;
-                }
-            }
-        });
-
-        // City selection listener
-        binding.citySpinner.setOnItemClickListener((parent, view, position, id) -> {
-            String selectedCity = cityAdapter.getItem(position);
-            // Find and save the selected city ID
-            for (City city : cityList) {
-                if (city.getName().equals(selectedCity)) {
-                    selectedCityId = city.getId(); // Add this as class variable
-                    break;
-                }
-            }
-        });
-    }
-
-    private void loadProvinces() {
-        ApiClient.getClient().getProvinces().enqueue(new Callback<ProvinceResponse>() {
-            @Override
-            public void onResponse(Call<ProvinceResponse> call, Response<ProvinceResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    if (response.body().rajaongkir != null && response.body().rajaongkir.getProvinces() != null) {
-                        provinceList.clear();
-                        provinceList.addAll(response.body().rajaongkir.getProvinces());
-
-                        List<String> provinceNames = new ArrayList<>();
-                        for (Province province : provinceList) {
-                            provinceNames.add(province.getName());
-                        }
-
-                        provinceAdapter.clear();
-                        provinceAdapter.addAll(provinceNames);
-                        provinceAdapter.notifyDataSetChanged();
-
-                        // Set current province if exists
-                        String currentProvince = sessionManager.getProvince();
-                        if (currentProvince != null && !currentProvince.isEmpty()) {
-                            binding.provinceSpinner.setText(currentProvince, false);
-                            // Find and load cities for current province
-                            for (Province province : provinceList) {
-                                if (province.getName().equals(currentProvince)) {
-                                    loadCities(province.getId());
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ProvinceResponse> call, Throwable t) {
-                Toasty.error(requireContext(), "Failed to load provinces: " + t.getMessage()).show();
-            }
-        });
-    }
-
-    private void loadCities(String provinceId) {
-        ApiClient.getClient().getCities(provinceId).enqueue(new Callback<CityResponse>() {
-            @Override
-            public void onResponse(Call<CityResponse> call, Response<CityResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    if (response.body().rajaongkir != null && response.body().rajaongkir.getCities() != null) {
-                        cityList.clear();
-                        cityList.addAll(response.body().rajaongkir.getCities());
-
-                        List<String> cityNames = new ArrayList<>();
-                        for (City city : cityList) {
-                            cityNames.add(city.getName());
-                        }
-
-                        cityAdapter.clear();
-                        cityAdapter.addAll(cityNames);
-                        cityAdapter.notifyDataSetChanged();
-
-                        // Set current city if exists
-                        String currentCity = sessionManager.getCity();
-                        if (currentCity != null && !currentCity.isEmpty()) {
-                            binding.citySpinner.setText(currentCity, false);
-                        }
-                    }
-                }
-            }
-
-            @Override
-            public void onFailure(Call<CityResponse> call, Throwable t) {
-                Toasty.error(requireContext(), "Failed to load cities: " + t.getMessage()).show();
-            }
-        });
     }
 
     private void setupUserData() {
@@ -384,8 +261,8 @@ public class EditProfileFragment extends Fragment {
         binding.fullnameInput.setText(sessionManager.getFullname());
         binding.phoneInput.setText(sessionManager.getPhone());
         binding.addressInput.setText(sessionManager.getAddress());
-        binding.provinceSpinner.setText(sessionManager.getProvince(), false);
-        binding.citySpinner.setText(sessionManager.getCity(), false);
+        binding.provinceInput.setText(sessionManager.getProvince());
+        binding.cityInput.setText(sessionManager.getCity());
         binding.postalCodeInput.setText(sessionManager.getPostalCode());
 
         // Load avatar if exists
@@ -396,12 +273,6 @@ public class EditProfileFragment extends Fragment {
             loadImageFromPath(avatarPath);
         } else {
             System.out.println("No avatar path found in session"); // Debug log
-        }
-
-        // If province is set, load its cities
-        String currentProvince = sessionManager.getProvince();
-        if (currentProvince != null && !currentProvince.isEmpty()) {
-            loadProvinces(); // This will also load cities for the current province
         }
     }
 
@@ -493,8 +364,8 @@ public class EditProfileFragment extends Fragment {
         binding.fullnameInput.setText(sessionManager.getFullname());
         binding.phoneInput.setText(sessionManager.getPhone());
         binding.addressInput.setText(sessionManager.getAddress());
-        binding.citySpinner.setText(sessionManager.getCity(), false);
-        binding.provinceSpinner.setText(sessionManager.getProvince(), false);
+        binding.cityInput.setText(sessionManager.getCity());
+        binding.provinceInput.setText(sessionManager.getProvince());
         binding.postalCodeInput.setText(sessionManager.getPostalCode());
     }
 
@@ -523,6 +394,20 @@ public class EditProfileFragment extends Fragment {
             isValid = false;
         } else {
             binding.phoneContainer.setError(null);
+        }
+
+        if (binding.provinceInput.getText().toString().trim().isEmpty()) {
+            binding.provinceContainer.setError("Province is required");
+            isValid = false;
+        } else {
+            binding.provinceContainer.setError(null);
+        }
+
+        if (binding.cityInput.getText().toString().trim().isEmpty()) {
+            binding.cityContainer.setError("City is required");
+            isValid = false;
+        } else {
+            binding.cityContainer.setError(null);
         }
 
         return isValid;

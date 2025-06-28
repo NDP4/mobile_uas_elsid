@@ -1,6 +1,7 @@
 package com.mobile2.uas_elsid.ui.product;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -49,6 +50,7 @@ public class ProductFragment extends Fragment {
     private double minPrice = 0;
     private double maxPrice = 10000000;
     private String sortBy = "newest";
+    private Call<ProductResponse> productCall;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -241,42 +243,62 @@ public class ProductFragment extends Fragment {
         if (isLoading) return;
         isLoading = true;
 
-        binding.loadingView.loadingContainer.setVisibility(View.VISIBLE);
+        if (binding != null && binding.loadingView != null) {
+            binding.loadingView.loadingContainer.setVisibility(View.VISIBLE);
+        }
+
         apiService.getProducts().enqueue(new Callback<ProductResponse>() {
             @Override
             public void onResponse(@NonNull Call<ProductResponse> call, @NonNull Response<ProductResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    List<Product> filteredProducts = response.body().getProducts().stream()
-                            .filter(product -> {
-                                double price = product.getPrice();
-                                return price >= minPrice && price <= maxPrice;
-                            })
-                            .collect(Collectors.toList());
-
-                    // Apply sorting
-                    switch (sortBy) {
-                        case "price_asc":
-                            filteredProducts.sort((p1, p2) -> p1.getPrice() - p2.getPrice());
-                            break;
-                        case "price_desc":
-                            filteredProducts.sort((p1, p2) -> p2.getPrice() - p1.getPrice());
-                            break;
-                        default:
-                            // Sort by newest (already in correct order from API)
-                            break;
+                if (!isAdded() || binding == null) return; // Pastikan fragment masih aktif
+                try {
+                    if (response.isSuccessful() && response.body() != null) {
+                        List<Product> products = response.body().getProducts();
+                        if (products != null && !products.isEmpty()) {
+                            productAdapter.setProducts(products);
+                            if (binding != null) binding.recyclerViewProducts.setVisibility(View.VISIBLE);
+                            if (binding != null && binding.loadingView != null) {
+                                binding.loadingView.getRoot().setVisibility(View.GONE);
+                            }
+                        } else {
+                            if (binding != null) binding.recyclerViewProducts.setVisibility(View.GONE);
+                            if (binding != null && binding.emptyState != null) {
+                                binding.emptyState.setVisibility(View.VISIBLE);
+                            }
+                        }
+                    } else {
+                        if (binding != null) binding.recyclerViewProducts.setVisibility(View.GONE);
+                        if (binding != null && binding.emptyState != null) {
+                            binding.emptyState.setVisibility(View.VISIBLE);
+                        }
                     }
-
-                    productAdapter.setProducts(filteredProducts);
-                    binding.emptyState.setVisibility(filteredProducts.isEmpty() ? View.VISIBLE : View.GONE);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    if (binding != null) {
+                        binding.recyclerViewProducts.setVisibility(View.GONE);
+                        if (binding.emptyState != null) {
+                            binding.emptyState.setVisibility(View.VISIBLE);
+                        }
+                    }
                 }
-
-                binding.loadingView.loadingContainer.setVisibility(View.GONE);
+                if (binding != null && binding.loadingView != null) {
+                    binding.loadingView.loadingContainer.setVisibility(View.GONE);
+                }
+                if (binding != null && binding.swipeRefresh != null) {
+                    binding.swipeRefresh.setRefreshing(false);
+                }
                 isLoading = false;
             }
 
             @Override
             public void onFailure(@NonNull Call<ProductResponse> call, @NonNull Throwable t) {
-                binding.loadingView.loadingContainer.setVisibility(View.GONE);
+                if (!isAdded() || binding == null) return;
+                if (binding != null && binding.loadingView != null) {
+                    binding.loadingView.loadingContainer.setVisibility(View.GONE);
+                }
+                if (binding != null && binding.swipeRefresh != null) {
+                    binding.swipeRefresh.setRefreshing(false);
+                }
                 isLoading = false;
                 Toasty.error(requireContext(), "Error applying filters: " + t.getMessage()).show();
             }
@@ -323,24 +345,30 @@ public class ProductFragment extends Fragment {
         if (isLoading) return;
         isLoading = true;
 
-        if (!binding.swipeRefresh.isRefreshing()) {
-            binding.loadingView.loadingContainer.setVisibility(View.VISIBLE);
+        if (binding != null && binding.swipeRefresh != null && !binding.swipeRefresh.isRefreshing()) {
+            if (binding.loadingView != null) {
+                binding.loadingView.loadingContainer.setVisibility(View.VISIBLE);
+            }
         }
 
         apiService = ApiClient.getClient();
 
-        apiService.getProducts().enqueue(new Callback<ProductResponse>() {
+        // Cancel previous call if still running
+        if (productCall != null && !productCall.isCanceled()) {
+            productCall.cancel();
+        }
+        productCall = apiService.getProducts();
+        productCall.enqueue(new Callback<ProductResponse>() {
             @Override
             public void onResponse(@NonNull Call<ProductResponse> call, @NonNull Response<ProductResponse> response) {
-                binding.loadingView.loadingContainer.setVisibility(View.GONE);
-                binding.swipeRefresh.setRefreshing(false);
+                if (!isAdded() || binding == null) return;
+                if (binding.loadingView != null) binding.loadingView.loadingContainer.setVisibility(View.GONE);
+                if (binding.swipeRefresh != null) binding.swipeRefresh.setRefreshing(false);
                 isLoading = false;
 
                 if (response.isSuccessful() && response.body() != null) {
                     List<Product> allProducts = response.body().getProducts();
                     List<Product> filteredProducts;
-
-                    // Filter products based on category or search query
                     if (selectedCategory != null) {
                         filteredProducts = allProducts.stream()
                                 .filter(product -> selectedCategory.equals(product.getCategory()))
@@ -353,25 +381,26 @@ public class ProductFragment extends Fragment {
                     } else {
                         filteredProducts = allProducts;
                     }
-
-                    productAdapter.setProducts(filteredProducts);
-
-                    if (filteredProducts.isEmpty()) {
-                        binding.emptyState.setVisibility(View.VISIBLE);
-                    } else {
-                        binding.emptyState.setVisibility(View.GONE);
+                    if (binding != null && productAdapter != null) productAdapter.setProducts(filteredProducts);
+                    if (binding != null) {
+                        if (filteredProducts.isEmpty()) {
+                            binding.emptyState.setVisibility(View.VISIBLE);
+                        } else {
+                            binding.emptyState.setVisibility(View.GONE);
+                        }
                     }
                 } else {
-                    Toasty.error(requireContext(), "Failed to load products").show();
+                    if (binding != null) Toasty.error(requireContext(), "Failed to load products").show();
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<ProductResponse> call, @NonNull Throwable t) {
-                binding.loadingView.loadingContainer.setVisibility(View.GONE);
-                binding.swipeRefresh.setRefreshing(false);
+                if (!isAdded() || binding == null) return;
+                if (binding.loadingView != null) binding.loadingView.loadingContainer.setVisibility(View.GONE);
+                if (binding.swipeRefresh != null) binding.swipeRefresh.setRefreshing(false);
                 isLoading = false;
-                Toasty.error(requireContext(), "Network error: " + t.getMessage()).show();
+                if (binding != null) Toasty.error(requireContext(), "Network error: " + t.getMessage()).show();
             }
         });
     }
@@ -388,6 +417,7 @@ public class ProductFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        if (productCall != null) productCall.cancel();
         binding = null;
     }
 }

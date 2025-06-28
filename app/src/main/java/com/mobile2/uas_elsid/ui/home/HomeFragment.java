@@ -265,6 +265,8 @@ public class HomeFragment extends Fragment implements CategoryAdapter.OnCategory
         ApiClient.getClient().getProducts().enqueue(new Callback<ProductResponse>() {
             @Override
             public void onResponse(@NonNull Call<ProductResponse> call, @NonNull Response<ProductResponse> response) {
+                if (!isAdded() || binding == null) return; // Cek apakah fragment masih aktif
+
                 if (response.isSuccessful() && response.body() != null) {
                     List<Product> products = response.body().getProducts();
                     if (products != null && !products.isEmpty()) {
