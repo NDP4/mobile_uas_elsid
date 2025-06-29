@@ -247,7 +247,8 @@ public class ProductFragment extends Fragment {
             binding.loadingView.loadingContainer.setVisibility(View.VISIBLE);
         }
 
-        apiService.getProducts().enqueue(new Callback<ProductResponse>() {
+        // Get all products then apply filters locally
+        ApiClient.getClient().getProducts().enqueue(new Callback<ProductResponse>() {
             @Override
             public void onResponse(@NonNull Call<ProductResponse> call, @NonNull Response<ProductResponse> response) {
                 if (!isAdded() || binding == null) return; // Pastikan fragment masih aktif
@@ -255,6 +256,45 @@ public class ProductFragment extends Fragment {
                     if (response.isSuccessful() && response.body() != null) {
                         List<Product> products = response.body().getProducts();
                         if (products != null && !products.isEmpty()) {
+                            // Apply price filter
+                            products = products.stream()
+                                .filter(product -> {
+                                    double price = product.getDiscount() > 0 ? 
+                                        product.getPrice() * (1 - product.getDiscount() / 100.0) : 
+                                        product.getPrice();
+                                    return price >= minPrice && price <= maxPrice;
+                                })
+                                .collect(Collectors.toList());
+
+                            // Apply sorting
+                            switch (sortBy) {
+                                case "price_asc":
+                                    products.sort((p1, p2) -> {
+                                        double price1 = p1.getDiscount() > 0 ? 
+                                            p1.getPrice() * (1 - p1.getDiscount() / 100.0) : 
+                                            p1.getPrice();
+                                        double price2 = p2.getDiscount() > 0 ? 
+                                            p2.getPrice() * (1 - p2.getDiscount() / 100.0) : 
+                                            p2.getPrice();
+                                        return Double.compare(price1, price2);
+                                    });
+                                    break;
+                                case "price_desc":
+                                    products.sort((p1, p2) -> {
+                                        double price1 = p1.getDiscount() > 0 ? 
+                                            p1.getPrice() * (1 - p1.getDiscount() / 100.0) : 
+                                            p1.getPrice();
+                                        double price2 = p2.getDiscount() > 0 ? 
+                                            p2.getPrice() * (1 - p2.getDiscount() / 100.0) : 
+                                            p2.getPrice();
+                                        return Double.compare(price2, price1);
+                                    });
+                                    break;
+                                default: // newest
+                                    products.sort((p1, p2) -> Integer.compare(p2.getId(), p1.getId()));
+                                    break;
+                            }
+
                             productAdapter.setProducts(products);
                             if (binding != null) binding.recyclerViewProducts.setVisibility(View.VISIBLE);
                             if (binding != null && binding.loadingView != null) {
