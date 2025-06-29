@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Invoice</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            max-height: 60px;
+            margin-bottom: 15px;
+        }
+
+        .invoice-title {
+            color: #0066cc;
+            font-size: 28px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .invoice-info {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            color: #0066cc;
+            font-weight: bold;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #0066cc;
+        }
+
+        .address-container {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .address-box {
+            width: 48%;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            text-align: left;
+            padding: 10px;
+        }
+
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .summary {
+            margin-left: auto;
+            width: 40%;
+        }
+
+        .summary table {
+            margin-left: auto;
+        }
+
+        .total-row td {
+            font-weight: bold;
+            border-top: 2px solid #0066cc;
+        }
+
+        .footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+        }
+
+        .store-info {
+            margin-bottom: 10px;
+        }
+
+        .payment-method {
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+
+        .bold {
+            font-weight: bold;
+        }
+
+        .thank-you {
+            font-style: italic;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="file:///android_asset/logo.png" alt="ELS.ID Computer Logo" class="logo">
+            <div class="invoice-title">INVOICE</div>
+        </div>
+
+        <div class="invoice-info">
+            <div><strong>Invoice #{{ORDER_ID}}</strong></div>
+            <div>Date: {{ORDER_DATE}}</div>
+        </div>
+
+        <div class="section">
+            <div class="address-container">
+                <div class="address-box">
+                    <div class="section-title">Shipping Details</div>
+                    <div>{{CUSTOMER_NAME}}</div>
+                    <div>{{SHIPPING_ADDRESS}}</div>
+                    <div>{{SHIPPING_CITY}}, {{SHIPPING_PROVINCE}} {{SHIPPING_POSTAL_CODE}}</div>
+                    <div>Courier: {{COURIER}} {{COURIER_SERVICE}}</div>
+                </div>
+                <div class="address-box">
+                    <div class="section-title">Billing Details</div>
+                    <div>{{CUSTOMER_NAME}}</div>
+                    <div>{{CUSTOMER_EMAIL}}</div>
+                    <div>{{CUSTOMER_PHONE}}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Order Items</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th width="50%">Item</th>
+                        <th width="10%">Qty</th>
+                        <th width="20%">Price</th>
+                        <th width="20%" class="text-right">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{ORDER_ITEMS}}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="payment-method">
+            <strong>Payment Method:</strong> {{PAYMENT_METHOD}}
+        </div>
+
+        <div class="section">
+            <div class="summary">
+                <table>
+                    <tr>
+                        <td>Subtotal:</td>
+                        <td class="text-right">{{SUBTOTAL}}</td>
+                    </tr>
+                    <tr>
+                        <td>Shipping Cost:</td>
+                        <td class="text-right">{{SHIPPING_COST}}</td>
+                    </tr>
+                    {{DISCOUNT_ROW}}
+                    <tr class="total-row">
+                        <td>Total:</td>
+                        <td class="text-right">{{TOTAL_AMOUNT}}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div class="store-info">
+                <div class="bold">ELS.ID Computer Semarang</div>
+                <div>Jl. MH Thamrin No.45, Miroto, Kec. Semarang Tengah, Kota Semarang, Jawa Tengah 50134</div>
+                <div>Telp: 024-3500-500 / 0899-033-5000 | Email: semarang@els.co.id</div>
+                <div>Jam Operasional: Senin – Minggu: 08:30 – 21:00</div>
+            </div>
+            <div class="thank-you">Terima kasih telah berbelanja di ELS.ID Computer Semarang!</div>
+            <div>Invoice generated by Els.ID Mobile App</div>
+        </div>
+    </div>
+</body>
+
+</html>
