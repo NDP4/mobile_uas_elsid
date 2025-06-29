@@ -225,8 +225,8 @@ public class DetailPesananFragment extends Fragment {
                                 Log.e("ShippingDebug", "Error body: " + errorBody);
                                 requireActivity().runOnUiThread(() -> {
                                     if (errorBody.contains("Internal Server Error")) {
-                                        Toasty.error(requireContext(), 
-                                            "RajaOngkir service error, please try again later").show();
+//                                        Toasty.error(requireContext(),
+//                                            "RajaOngkir service error, please try again later").show();
                                     } else {
                                         Toasty.error(requireContext(), "Error: " + errorBody).show();
                                     }
@@ -333,7 +333,20 @@ public class DetailPesananFragment extends Fragment {
                     try {
                         if (response.errorBody() != null) {
                             String errorBody = response.errorBody().string();
-                            Toasty.error(requireContext(), "Failed to apply coupon: " + errorBody).show();
+                            String errorMessage = null;
+                            try {
+                                ErrorResponse error = new Gson().fromJson(errorBody, ErrorResponse.class);
+                                if (error != null && error.getMessage() != null && !error.getMessage().isEmpty()) {
+                                    errorMessage = error.getMessage();
+                                }
+                            } catch (Exception e) {
+                                // Ignore JSON parse error, fallback to raw errorBody
+                            }
+                            if (errorMessage != null) {
+                                Toasty.error(requireContext(), errorMessage).show();
+                            } else {
+                                Toasty.error(requireContext(), "Failed to apply coupon: " + errorBody).show();
+                            }
                         } else {
                             Toasty.error(requireContext(), "Invalid coupon code").show();
                         }
