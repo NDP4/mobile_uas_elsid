@@ -215,6 +215,8 @@ public class DetailPesananFragment extends Fragment {
                 @Override
                 public void onResponse(@NonNull Call<ShippingCostResponse> call, 
                                      @NonNull Response<ShippingCostResponse> response) {
+                    if (!isAdded()) return; // Check if fragment is still attached
+                    
                     Log.d("ShippingDebug", "Got response for " + courier + ", code: " + response.code());
                     
                     if (!response.isSuccessful()) {
@@ -224,6 +226,7 @@ public class DetailPesananFragment extends Fragment {
                                 String errorBody = response.errorBody().string();
                                 Log.e("ShippingDebug", "Error body: " + errorBody);
                                 requireActivity().runOnUiThread(() -> {
+                                    if (!isAdded()) return;
                                     if (errorBody.contains("Internal Server Error")) {
 //                                        Toasty.error(requireContext(),
 //                                            "RajaOngkir service error, please try again later").show();
@@ -233,8 +236,10 @@ public class DetailPesananFragment extends Fragment {
                                 });
                             } catch (IOException e) {
                                 e.printStackTrace();
-                                requireActivity().runOnUiThread(() -> 
-                                    Toasty.error(requireContext(), "Error getting shipping rates").show());
+                                requireActivity().runOnUiThread(() -> {
+                                    if (!isAdded()) return;
+                                    Toasty.error(requireContext(), "Error getting shipping rates").show();
+                                });
                             }
                         }
                         return;
@@ -243,6 +248,7 @@ public class DetailPesananFragment extends Fragment {
                     if (response.body() == null) {
                         Log.e("ShippingDebug", "Response body is null");
                         requireActivity().runOnUiThread(() -> {
+                            if (!isAdded()) return;
                             Toasty.error(requireContext(), "No response data received").show();
                         });
                         return;
@@ -278,9 +284,12 @@ public class DetailPesananFragment extends Fragment {
 
                 @Override
                 public void onFailure(@NonNull Call<ShippingCostResponse> call, @NonNull Throwable t) {
+                    if (!isAdded()) return;
+                    
                     Log.e("ShippingDebug", "API call failed for " + courier + ": " + t.getMessage());
                     t.printStackTrace();
                     requireActivity().runOnUiThread(() -> {
+                        if (!isAdded()) return;
                         Toasty.error(requireContext(), 
                             "Failed to get shipping rates. Please check your connection.").show();
                     });
@@ -614,6 +623,8 @@ public class DetailPesananFragment extends Fragment {
         ApiClient.getClient().createOrder(orderData).enqueue(new Callback<OrderResponse>() {
             @Override
             public void onResponse(@NonNull Call<OrderResponse> call, @NonNull Response<OrderResponse> response) {
+                if (!isAdded()) return; // Check if fragment is still attached
+
                 if (response.isSuccessful() && response.body() != null) {
                     OrderResponse orderResponse = response.body();
                     int orderId = orderResponse.getOrder().getId();
@@ -654,6 +665,8 @@ public class DetailPesananFragment extends Fragment {
                         ApiClient.getClient().createPayment(paymentRequest).enqueue(new Callback<PaymentResponse>() {
                             @Override
                             public void onResponse(@NonNull Call<PaymentResponse> call, @NonNull Response<PaymentResponse> response) {
+                                if (!isAdded()) return;
+                                
                                 if (response.isSuccessful() && response.body() != null 
                                     && response.body().getData() != null
                                     && response.body().getData().getPaymentUrl() != null) {
@@ -681,6 +694,8 @@ public class DetailPesananFragment extends Fragment {
 
                             @Override
                             public void onFailure(@NonNull Call<PaymentResponse> call, @NonNull Throwable t) {
+                                if (!isAdded()) return;
+                                
                                 Log.e("PaymentDebug", "Payment network error: " + t.getMessage());
                                 Toasty.error(requireContext(), "Network error: " + t.getMessage()).show();
                             }
@@ -702,12 +717,13 @@ public class DetailPesananFragment extends Fragment {
 
                             @Override
                             public void onError(String message) {
+                                if (!isAdded()) return;
+                                
                                 Log.e("CartDebug", "Failed to clear cart: " + message);
-                                if (isAdded()) {
-                                    requireActivity().runOnUiThread(() -> {
-                                        Toasty.error(requireContext(), "Failed to clear cart: " + message).show();
-                                    });
-                                }
+                                requireActivity().runOnUiThread(() -> {
+                                    if (!isAdded()) return;
+                                    Toasty.error(requireContext(), "Failed to clear cart: " + message).show();
+                                });
                             }
                         });
                     }
@@ -726,6 +742,7 @@ public class DetailPesananFragment extends Fragment {
 
             @Override
             public void onFailure(@NonNull Call<OrderResponse> call, @NonNull Throwable t) {
+                if (!isAdded()) return;
                 Toasty.error(requireContext(), "Network error: " + t.getMessage()).show();
             }
         });
@@ -884,6 +901,8 @@ public class DetailPesananFragment extends Fragment {
             @Override
             public void onResponse(@NonNull Call<CityResponse> call,
                                    @NonNull Response<CityResponse> response) {
+                if (!isAdded()) return; // Check if fragment is still attached
+                                   
                 if (response.isSuccessful() && response.body() != null &&
                         response.body().rajaongkir != null &&
                         response.body().rajaongkir.getCities() != null) {
@@ -904,6 +923,7 @@ public class DetailPesananFragment extends Fragment {
 
             @Override
             public void onFailure(@NonNull Call<CityResponse> call, @NonNull Throwable t) {
+                if (!isAdded()) return;
                 Toasty.error(requireContext(), "Failed to load cities: " + t.getMessage()).show();
             }
         });

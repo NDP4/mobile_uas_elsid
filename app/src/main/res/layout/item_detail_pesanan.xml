@@ -86,6 +86,16 @@
                     android:textColor="@color/primary"
                     tools:text="Rp 5.000.000"/>
             </LinearLayout>
+            <!-- Discount Text -->
+            <TextView
+                android:id="@+id/discountText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textSize="14sp"
+                android:textColor="@color/success"
+                android:visibility="gone"
+                tools:text="-Rp 50.000 (Kupon: CODE50)"/>
         </LinearLayout>
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

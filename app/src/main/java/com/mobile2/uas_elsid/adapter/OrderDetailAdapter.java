@@ -58,13 +58,26 @@ public class OrderDetailAdapter extends RecyclerView.Adapter<OrderDetailAdapter.
         OrderItem item = items.get(position);
 
         // Load product image
-        ProductImage firstImage = item.getProduct().getImages().get(0);
-        String imageUrl = "https://apilumenmobileuas.ndp.my.id/" + firstImage.getImageUrl();
-        if (imageUrl != null && !imageUrl.isEmpty()) {
-            Glide.with(context)
-                    .load(imageUrl)
-                    .placeholder(R.drawable.placeholder_image)
-                    .into(holder.productImage);
+        if (item.getProduct().getImages() != null && !item.getProduct().getImages().isEmpty()) {
+            ProductImage firstImage = item.getProduct().getImages().get(0);
+            String imageUrl = firstImage.getImageUrl();
+            if (imageUrl != null && !imageUrl.isEmpty()) {
+                // Remove extra slash if present
+                if (imageUrl.startsWith("/")) {
+                    imageUrl = imageUrl.substring(1);
+                }
+                String fullImageUrl = "https://apilumenmobileuas.ndp.my.id/" + imageUrl;
+
+                Glide.with(context)
+                        .load(fullImageUrl)
+                        .placeholder(R.drawable.placeholder_image)
+                        .error(R.drawable.error_image)
+                        .into(holder.productImage);
+            } else {
+                holder.productImage.setImageResource(R.drawable.placeholder_image);
+            }
+        } else {
+            holder.productImage.setImageResource(R.drawable.placeholder_image);
         }
 
         // Set product title
@@ -83,9 +96,9 @@ public class OrderDetailAdapter extends RecyclerView.Adapter<OrderDetailAdapter.
 
         // Calculate and set price
         int price = calculatePrice(
-            item.getVariant() != null ? item.getVariant().getPrice() : item.getProduct().getPrice(),
-            item.getVariant() != null ? item.getVariant().getDiscount() : item.getProduct().getDiscount(),
-            item.getQuantity()
+                item.getVariant() != null ? item.getVariant().getPrice() : item.getProduct().getPrice(),
+                item.getVariant() != null ? item.getVariant().getDiscount() : item.getProduct().getDiscount(),
+                item.getQuantity()
         );
         holder.priceText.setText(formatPrice(price));
 
@@ -93,7 +106,7 @@ public class OrderDetailAdapter extends RecyclerView.Adapter<OrderDetailAdapter.
         if (discountAmount > 0 && couponCode != null && holder.discountText != null) {
             holder.discountText.setVisibility(View.VISIBLE);
             holder.discountText.setText(String.format("-%s (Kupon: %s)",
-                formatPrice(discountAmount), couponCode));
+                    formatPrice(discountAmount), couponCode));
         } else if (holder.discountText != null) {
             holder.discountText.setVisibility(View.GONE);
         }
@@ -121,7 +134,7 @@ public class OrderDetailAdapter extends RecyclerView.Adapter<OrderDetailAdapter.
         ViewHolder(View itemView) {
             super(itemView);
             productImage = itemView.findViewById(R.id.productImage);
-            titleText = itemView.findViewById(R.id.titleText);
+            titleText = itemView.findViewById(R.id.productTitleText);
             variantText = itemView.findViewById(R.id.variantText);
             quantityText = itemView.findViewById(R.id.quantityText);
             priceText = itemView.findViewById(R.id.priceText);

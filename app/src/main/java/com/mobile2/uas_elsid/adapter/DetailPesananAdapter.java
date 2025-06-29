@@ -43,6 +43,27 @@ public class DetailPesananAdapter extends RecyclerView.Adapter<DetailPesananAdap
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         CartItem item = items.get(position);
 
+        // Load product image
+        if (item.getProduct().getImages() != null && !item.getProduct().getImages().isEmpty()) {
+            ProductImage firstImage = item.getProduct().getImages().get(0);
+            String imageUrl = firstImage.getImageUrl();
+            String fullImageUrl = imageUrl.startsWith("http") ?
+                    imageUrl : "https://apilumenmobileuas.ndp.my.id/" + imageUrl;
+
+            try {
+                Glide.with(context)
+                        .load(fullImageUrl)
+                        .placeholder(R.drawable.placeholder_image)
+                        .error(R.drawable.error_image)
+                        .into(holder.productImage);
+            } catch (Exception e) {
+                e.printStackTrace();
+                holder.productImage.setImageResource(R.drawable.placeholder_image);
+            }
+        } else {
+            holder.productImage.setImageResource(R.drawable.placeholder_image);
+        }
+
         // Set product title
         if (holder.productTitleText != null) {
             holder.productTitleText.setText(item.getProduct().getTitle());
@@ -79,23 +100,6 @@ public class DetailPesananAdapter extends RecyclerView.Adapter<DetailPesananAdap
                 );
             }
             holder.priceText.setText(formatPrice(price));
-        }
-
-        // Load product image
-        if (holder.productImage != null) {
-            if (item.getProduct().getImages() != null && !item.getProduct().getImages().isEmpty()) {
-                ProductImage image = item.getProduct().getImages().get(0);
-                String imageUrl = image.getImageUrl();
-                if (imageUrl != null && !imageUrl.isEmpty()) {
-                    Glide.with(context)
-                            .load(imageUrl)
-                            .placeholder(R.drawable.placeholder_image)
-                            .into(holder.productImage);
-                }
-            } else {
-                // Set default placeholder image
-                holder.productImage.setImageResource(R.drawable.placeholder_image);
-            }
         }
     }
 
