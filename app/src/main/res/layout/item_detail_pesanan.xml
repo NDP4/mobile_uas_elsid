@@ -5,25 +5,29 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    app:strokeColor="@color/primary"
-    android:layout_marginHorizontal="8dp"
     android:layout_marginVertical="4dp"
     app:cardCornerRadius="8dp"
-    app:cardElevation="2dp">
+    app:cardElevation="0dp"
+    app:strokeWidth="1dp"
+    app:strokeColor="@color/divider">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:background="@color/text_white"
-        android:padding="10dp">
+        android:padding="12dp">
 
-        <ImageView
+        <!-- Product Image -->
+        <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/productImage"
             android:layout_width="80dp"
             android:layout_height="80dp"
-            android:scaleType="centerCrop"/>
+            android:scaleType="centerCrop"
+            app:shapeAppearanceOverlay="@style/RoundedImageView"
+            android:background="@color/background_light"
+            tools:src="@drawable/ic_cart"/>
 
+        <!-- Product Info -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -32,54 +36,57 @@
             android:orientation="vertical">
 
             <TextView
-                android:id="@+id/titleText"
+                android:id="@+id/productTitleText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textSize="16sp"
                 android:textColor="@color/text_primary"
                 android:maxLines="2"
                 android:ellipsize="end"
-                tools:text="Product Title"/>
+                tools:text="Intel Core i7-12700K Desktop Processor"/>
 
+            <!-- Variant info if available -->
             <TextView
                 android:id="@+id/variantText"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:textSize="12sp"
-                android:textColor="@color/text_secondary"
-                tools:text="Variant Name"/>
-
-            <TextView
-                android:id="@+id/quantityText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:textSize="12sp"
-                android:textColor="@color/text_secondary"
-                tools:text="Qty: 2"/>
-
-            <TextView
-                android:id="@+id/priceText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="@color/primary"
-                tools:text="Rp 200.000"/>
-
-            <TextView
-                android:id="@+id/discountText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
                 android:textSize="14sp"
-                android:textColor="@color/success"
-                android:visibility="gone"
-                tools:text="-Rp 20.000 (Kupon: SALE50)"/>
+                android:textColor="@color/text_secondary"
+                android:layout_marginTop="4dp"
+                tools:text="12-core, 20-thread"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="8dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Qty: "
+                    android:textSize="14sp"
+                    android:textColor="@color/text_secondary"/>
+
+                <TextView
+                    android:id="@+id/quantityText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="14sp"
+                    android:textColor="@color/text_secondary"
+                    tools:text="2"/>
+
+                <TextView
+                    android:id="@+id/priceText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textAlignment="textEnd"
+                    android:textColor="@color/primary"
+                    tools:text="Rp 5.000.000"/>
+            </LinearLayout>
         </LinearLayout>
     </LinearLayout>
-
 </com.google.android.material.card.MaterialCardView>
 

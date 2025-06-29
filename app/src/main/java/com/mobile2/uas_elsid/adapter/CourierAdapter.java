@@ -85,6 +85,9 @@ public class CourierAdapter extends RecyclerView.Adapter<CourierAdapter.ViewHold
         holder.serviceText.setText(cost.service);
         holder.descriptionText.setText(cost.description);
 
+        // Set radio button state
+        holder.radioButton.setChecked(position == selectedPosition);
+
         // Set cost
         if (!cost.cost.isEmpty()) {
             int shippingCost = cost.cost.get(0).value;
@@ -138,7 +141,7 @@ public class CourierAdapter extends RecyclerView.Adapter<CourierAdapter.ViewHold
             radioButton = view.findViewById(R.id.radioButton);
             serviceText = view.findViewById(R.id.serviceText);
             descriptionText = view.findViewById(R.id.descriptionText);
-            costText = view.findViewById(R.id.costText);
+            costText = view.findViewById(R.id.courierCostText);
             etdText = view.findViewById(R.id.etdText);
         }
     }

@@ -44,46 +44,58 @@ public class DetailPesananAdapter extends RecyclerView.Adapter<DetailPesananAdap
         CartItem item = items.get(position);
 
         // Set product title
-        holder.titleText.setText(item.getProduct().getTitle());
-
-        // Set variant if exists
-        if (item.getVariant() != null) {
-            holder.variantText.setText(item.getVariant().getVariantName());
-            holder.variantText.setVisibility(View.VISIBLE);
-        } else {
-            holder.variantText.setVisibility(View.GONE);
+        if (holder.productTitleText != null) {
+            holder.productTitleText.setText(item.getProduct().getTitle());
         }
 
-        // Set quantity
-        holder.quantityText.setText(String.format("Qty: %d", item.getQuantity()));
-
-        // Calculate and set price
-        int finalPrice;
-        if (item.getVariant() != null) {
-            finalPrice = calculatePrice(
-                    item.getVariant().getPrice(),
-                    item.getVariant().getDiscount(),
-                    item.getQuantity()
-            );
-        } else {
-            finalPrice = calculatePrice(
-                    item.getProduct().getPrice(),
-                    item.getProduct().getDiscount(),
-                    item.getQuantity()
-            );
+        // Set variant info if available
+        if (holder.variantText != null) {
+            if (item.getVariant() != null) {
+                holder.variantText.setVisibility(View.VISIBLE);
+                holder.variantText.setText(item.getVariant().getVariantName());
+            } else {
+                holder.variantText.setVisibility(View.GONE);
+            }
         }
-        holder.priceText.setText(formatPrice(finalPrice));
 
-        // Load image
-        if (item.getProduct().getImages() != null && !item.getProduct().getImages().isEmpty()) {
-            ProductImage firstImage = item.getProduct().getImages().get(0);
-            String imageUrl = "https://apilumenmobileuas.ndp.my.id/" + firstImage.getImageUrl();
+        // Set quantity and price
+        if (holder.quantityText != null) {
+            holder.quantityText.setText(String.valueOf(item.getQuantity()));
+        }
 
-            Glide.with(context)
-                    .load(imageUrl)
-                    .placeholder(R.drawable.placeholder_image)
-                    .error(R.drawable.error_image)
-                    .into(holder.productImage);
+        if (holder.priceText != null) {
+            int price;
+            if (item.getVariant() != null) {
+                price = calculatePrice(
+                        item.getVariant().getPrice(),
+                        item.getVariant().getDiscount(),
+                        item.getQuantity()
+                );
+            } else {
+                price = calculatePrice(
+                        item.getProduct().getPrice(),
+                        item.getProduct().getDiscount(),
+                        item.getQuantity()
+                );
+            }
+            holder.priceText.setText(formatPrice(price));
+        }
+
+        // Load product image
+        if (holder.productImage != null) {
+            if (item.getProduct().getImages() != null && !item.getProduct().getImages().isEmpty()) {
+                ProductImage image = item.getProduct().getImages().get(0);
+                String imageUrl = image.getImageUrl();
+                if (imageUrl != null && !imageUrl.isEmpty()) {
+                    Glide.with(context)
+                            .load(imageUrl)
+                            .placeholder(R.drawable.placeholder_image)
+                            .into(holder.productImage);
+                }
+            } else {
+                // Set default placeholder image
+                holder.productImage.setImageResource(R.drawable.placeholder_image);
+            }
         }
     }
 
@@ -110,18 +122,18 @@ public class DetailPesananAdapter extends RecyclerView.Adapter<DetailPesananAdap
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         ImageView productImage;
-        TextView titleText;
+        TextView productTitleText;
         TextView variantText;
         TextView quantityText;
         TextView priceText;
 
-        ViewHolder(View view) {
-            super(view);
-            productImage = view.findViewById(R.id.productImage);
-            titleText = view.findViewById(R.id.titleText);
-            variantText = view.findViewById(R.id.variantText);
-            quantityText = view.findViewById(R.id.quantityText);
-            priceText = view.findViewById(R.id.priceText);
+        public ViewHolder(@NonNull View itemView) {
+            super(itemView);
+            productImage = itemView.findViewById(R.id.productImage);
+            productTitleText = itemView.findViewById(R.id.productTitleText);
+            variantText = itemView.findViewById(R.id.variantText);
+            quantityText = itemView.findViewById(R.id.quantityText);
+            priceText = itemView.findViewById(R.id.priceText);
         }
     }
 }

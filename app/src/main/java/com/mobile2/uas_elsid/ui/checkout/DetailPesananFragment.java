@@ -979,7 +979,44 @@ public class DetailPesananFragment extends Fragment {
         // Jakarta
         cityIds.put("Jakarta Pusat", "152");
         cityIds.put("Jakarta Utara", "153");
-
+        cityIds.put("Jakarta Barat", "154");
+        cityIds.put("Jakarta Selatan", "155");
+        cityIds.put("Jakarta Timur", "156");
+        // Jawa Barat
+        cityIds.put("Bandung", "22");
+        cityIds.put("Bekasi", "55");
+        cityIds.put("Bogor", "79");
+        cityIds.put("Depok", "115");
+        cityIds.put("Cimahi", "107");
+        // Jawa Tengah
+        cityIds.put("Semarang", "399");
+        cityIds.put("Solo", "445");
+        cityIds.put("Magelang", "232");
+        cityIds.put("Pekalongan", "347");
+        cityIds.put("Tegal", "450");
+        // Jawa Timur
+        cityIds.put("Surabaya", "444");
+        cityIds.put("Malang", "255");
+        cityIds.put("Sidoarjo", "409");
+        cityIds.put("Kediri", "174");
+        cityIds.put("Madiun", "247");
+        // DI Yogyakarta
+        cityIds.put("Yogyakarta", "501");
+        cityIds.put("Bantul", "35");
+        cityIds.put("Sleman", "419");
+        cityIds.put("Kulon Progo", "203");
+        cityIds.put("Gunung Kidul", "135");
+        // Banten
+        cityIds.put("Serang", "402");
+        cityIds.put("Tangerang", "456");
+        cityIds.put("Cilegon", "106");
+        cityIds.put("Tangerang Selatan", "457");
+        // Bali
+        cityIds.put("Denpasar", "114");
+        cityIds.put("Badung", "17");
+        cityIds.put("Gianyar", "128");
+        cityIds.put("Tabanan", "447");
+        cityIds.put("Klungkung", "190");
 
         List<String> cities = citiesMap.get(provinceId);
         if (cities != null) {

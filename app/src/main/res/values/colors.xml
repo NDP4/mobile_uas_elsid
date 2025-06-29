@@ -40,4 +40,51 @@
     <color name="divider">#E0E0E0</color>
 
     <color name="indicator_stroke">#DDDDDD</color>
+    <color name="colorPrimary">#1A6BD8</color>
+    <color name="colorPrimaryDark">#0F3460</color>
+    <color name="colorAccent">#FF3366</color>
+
+    <!-- Custom colors for shop app -->
+<!--    <color name="primary">#1A6BD8</color>-->
+<!--    <color name="primary_dark">#0F3460</color>-->
+    <color name="accent">#FF3366</color>
+<!--    <color name="background">#F5F7FA</color>-->
+<!--    <color name="text_primary">#172B4D</color>-->
+<!--    <color name="text_secondary">#5E6C84</color>-->
+<!--    <color name="text_white">#FFFFFF</color>-->
+<!--    <color name="divider">#EBECF0</color>-->
+<!--    <color name="success">#36B37E</color>-->
+<!--    <color name="error">#FF5630</color>-->
+<!--    <color name="warning">#FFAB00</color>-->
+<!--    <color name="info">#0065FF</color>-->
+    <color name="info_background">#E6F0FF</color>
+    <color name="info_border">#B3D1FF</color>
+    <color name="progress_inactive">#A5ADBA</color>
+    <color name="payment_border">#DFE1E6</color>
+    <color name="cod_badge_text">#FF8B00</color>
+
+    <!-- Standard Android colors -->
+    <color name="black">#FF000000</color>
+<!--    <color name="white">#FFFFFFFF</color>-->
+
+    <!-- Additional colors -->
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+
+    <!-- App theme colors -->
+<!--    <color name="primary">#0078D7</color>-->
+<!--    <color name="primary_dark">#005A9E</color>-->
+<!--    <color name="primary_light">#B3E5FC</color>-->
+<!--    <color name="accent">#FF5722</color>-->
+    <color name="background_light">#F5F5F5</color>
+<!--    <color name="text_primary">#212121</color>-->
+<!--    <color name="text_secondary">#757575</color>-->
+<!--    <color name="divider">#DDDDDD</color>-->
+<!--    <color name="success">#4CAF50</color>-->
+<!--    <color name="error">#F44336</color>-->
+<!--    <color name="warning">#FFC107</color>-->
+<!--    <color name="info">#2196F3</color>-->
 </resources>
